@@ -1,5 +1,5 @@
 {
-  "author": "Metrological, Bas van Meurs <b.van.meurs@metrological.com>",
+  "author": "Comcast, Gurdal Oruklu <gurdal_oruklu@comcast.com>",
   "name": "wpe-lightning-spark",
   "version": "1.0.0",
   "license": "apache",
@@ -15,5 +15,8 @@
   },
   "bugs": {
     "url": "https://github.com/WebPlatformForEmbedded/Lightning/issues"
+  },
+  "devDependencies": {
+    "rollup-plugin-node-resolve": "^5.0.0"
   }
 }
