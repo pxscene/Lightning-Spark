@@ -6,7 +6,7 @@
   "dependencies": {
     "canvas": "https://github.com/basvanmeurs/node-canvas.git",
     "rollup": "^1.10.0",
-    "wpe-lightning": "https://github.com/WebPlatformForEmbedded/Lightning.git"
+    "wpe-lightning": "https://github.com/goruklu/Lightning.git#spark"
   },
   "main": "src/lightning.mjs",
   "scripts": {
