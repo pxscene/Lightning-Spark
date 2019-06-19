@@ -1,6 +1,6 @@
 # Lightning (Spark)
 
-This module is a Spark port for the [Lightning](https://github.com/WebPlatformForEmbedded/Lightning) framework.
+This module provides Spark platform support for the [Lightning](https://github.com/WebPlatformForEmbedded/Lightning) framework.
 
 ## Installation
 
