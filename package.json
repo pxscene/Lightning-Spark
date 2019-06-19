@@ -6,7 +6,7 @@
   "dependencies": {
     "canvas": "https://github.com/basvanmeurs/node-canvas.git",
     "rollup": "^1.10.0",
-    "wpe-lightning": "https://github.com/goruklu/Lightning.git#spark"
+    "wpe-lightning": "https://github.com/pxscene/Lightning.git#spark"
   },
   "main": "src/lightning.mjs",
   "scripts": {
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:goruklu/Lightning-spark.git"
+    "url": "git@github.com:pxscene/Lightning-Spark.git"
   },
   "bugs": {
     "url": "https://github.com/WebPlatformForEmbedded/Lightning/issues"
