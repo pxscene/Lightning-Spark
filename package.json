@@ -1,0 +1,19 @@
+{
+  "author": "Metrological, Bas van Meurs <b.van.meurs@metrological.com>",
+  "name": "wpe-lightning-spark",
+  "version": "1.0.0",
+  "license": "apache",
+  "dependencies": {
+    "canvas": "https://github.com/basvanmeurs/node-canvas.git",
+    "rollup": "^0.67.0",
+    "wpe-lightning": "https://github.com/WebPlatformForEmbedded/Lightning.git"
+  },
+  "main": "src/lightning.mjs",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:goruklu/Lightning-spark.git"
+  },
+  "bugs": {
+    "url": "https://github.com/WebPlatformForEmbedded/Lightning/issues"
+  }
+}
