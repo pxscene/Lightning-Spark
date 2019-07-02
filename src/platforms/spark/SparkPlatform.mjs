@@ -92,10 +92,10 @@ export default class SparkPlatform {
                 </g> \
                 </svg>';
     
-        var imageObj = sparkscene.create({ t: "image", url:"/Users/mfiess200/Downloads/simple-ightning-spark-apps-20190620_mod/simpleRoundRect/dist/spark/static/banana.png"});
+        var imageObj = sparkscene.create({ t: "image", url:data});
         imageObj.ready.then( function(obj) {
-            imageObj.w = imageObj.resource.w;
-            imageObj.h = imageObj.resource.h;
+            imageObj.w = w;
+            imageObj.h = h;
             cb(null, imageObj);
         });
     }
