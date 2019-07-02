@@ -61,22 +61,26 @@ export default class SparkPlatform {
         if (strokeWidth === undefined) strokeWidth = 0;
 
         fillColor = fill ? fillColor : "none";
-        var boundW = w;
-        var boundH = h;
-        var data = "data:image/svg,"+'<svg viewBox="0 0 '+boundW+' '+boundH+'" xmlns="http://www.w3.org/2000/svg"><rect width="'+w+'" height="'+h+'" fill="'+fillColor+'" rx="'+radius+'" stroke="'+strokeColor+'" stroke-width="'+strokeWidth+'"/></svg>';
+        let boundW = w;
+        let boundH = h;
+        let data = "data:image/svg,"+'<svg viewBox="0 0 '+boundW+' '+boundH+'" xmlns="http://www.w3.org/2000/svg"><rect width="'+w+'" height="'+h+'" fill="'+fillColor+'" rx="'+radius+'" stroke="'+strokeColor+'" stroke-width="'+strokeWidth+'"/></svg>';
     
-        var imageObj = sparkscene.create({ t: "image", url:data});
+        let imageObj = sparkscene.create({ t: "image", url:data});
         imageObj.ready.then( function(obj) {
+            let canvas = {};
+            canvas.internal = imageObj;
+            canvas.w = w;
+            canvas.h = h;
             imageObj.w = w;
             imageObj.h = h;
-            cb(null, imageObj);
+            cb(null, canvas);
         });
     }
 
     createShadowRect(cb, stage, w, h, radius, blur, margin) {
-        var boundW = w + margin * 2;
-        var boundH = h + margin * 2;
-        var data = "data:image/svg,"+
+        let boundW = w + margin * 2;
+        let boundH = h + margin * 2;
+        let data = "data:image/svg,"+
             '<svg viewBox="0 0 '+boundW+' '+boundH+'" xmlns="http://www.w3.org/2000/svg" version="1.1"> \
                     <linearGradient id="rectGradient" gradientUnits="userSpaceOnUse" x1="0%" y1="180%" x2="100%" y2="-60%" gradientTransform="rotate(0)"> \
                     <stop offset="20%" stop-color="#00FF00" stop-opacity="0.5"/> \
@@ -92,22 +96,32 @@ export default class SparkPlatform {
                 </g> \
                 </svg>';
     
-        var imageObj = sparkscene.create({ t: "image", url:data});
+        let imageObj = sparkscene.create({ t: "image", url:data});
         imageObj.ready.then( function(obj) {
+            let canvas = {};
+            canvas.internal = imageObj;
+            canvas.w = w;
+            canvas.h = h;
             imageObj.w = w;
             imageObj.h = h;
-            cb(null, imageObj);
+            cb(null, canvas);
         });
     }
 
     createSvg(cb, stage, url, w, h) {
-        var imageObj = sparkscene.create({ t: "image", url:ur});
+        let imageObj = sparkscene.create({ t: "image", url:ur});
         imageObj.ready.then( function(obj) {
+            let canvas = {};
+            canvas.internal = imageObj;
+            canvas.w = w;
+            canvas.h = h;
             imageObj.w = w;
             imageObj.h = h;
-            cb(null, imageObj);
+            cb(null, canvas);
         }, function(obj) {
-            cb(null, imageObj);;
+            let canvas = {};
+            canvas.internal = imageObj;
+            cb(null, canvas);;
         });
     }
 
@@ -128,12 +142,15 @@ export default class SparkPlatform {
     getTextureOptionsForDrawingCanvas(canvas) {
         let options = {};
 
-        options.source = this.stage.gl.createWebGLTexture(canvas.texture());
-        options.w = canvas.w;
-        options.h = canvas.h;
+        if (canvas && canvas.internal)
+        {
+            options.source = this.stage.gl.createWebGLTexture(canvas.internal.texture());
+            options.w = canvas.w;
+            options.h = canvas.h;
+            options.internal = canvas.internal;
+        }
         options.premultiplyAlpha = false;
-        options.flipBlueRed = false
-        options.internal = canvas;
+        options.flipBlueRed = false;
 
         return options;
     }
@@ -144,8 +161,9 @@ export default class SparkPlatform {
     }
 
     getDrawingCanvas() {
-        // We can't reuse this canvas because textures may load async.
-        return new canvas.Canvas(0, 0);
+        let canvas = {};
+        canvas.getContext = function() {};
+        return canvas;
     }
 
     nextFrame(changes) {
@@ -155,6 +173,23 @@ export default class SparkPlatform {
 
     registerKeyHandler(keyhandler) {
         console.warn("No support for key handling");
+    }
+
+    drawText(textTextureRender)
+    {
+        let sparkText = sparkscene.create({ t: "text", text:textTextureRender._settings.text, pixelSize:textTextureRender._settings.fontSize});
+
+        let drawPromise = new Promise(function(resolve, reject) {
+            sparkText.ready.then( function(obj) {
+                let renderInfo = {};
+                renderInfo.w = sparkText.w;
+                renderInfo.h = sparkText.h;
+                textTextureRender._canvas.internal = sparkText;
+                textTextureRender.renderInfo = renderInfo;
+                resolve();
+            });
+        });
+        return drawPromise;
     }
 
 }
