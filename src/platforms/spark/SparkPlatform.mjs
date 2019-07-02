@@ -48,48 +48,67 @@ export default class SparkPlatform {
     }
 
     loadSrcTexture({src}, cb) {
-        if (/^https?:\/\//i.test(src)) {
-            // URL. Download first.
-            let mod = null;
-            if (src.toLowerCase().indexOf("https:") === 0) {
-                mod = https;
-            } else {
-                mod = http;
-            }
-
-            mod.get(src, (res) => {
-                if (res.statusCode !== 200) {
-                    return cb(new Error("Status code " + res.statusCode + " for " + src));
-                }
-
-                let total = [];
-                res.on('data', (d) => {
-                    total.push(d);
-                });
-                res.on('end', () => {
-                    let buf = Buffer.concat(total);
-                    this.parseImage(buf, cb);
-                });
-            }).on('error', function(err) {
-                cb(err);
-            });
-        } else {
-            // File system.
-            fs.readFile(src, (err, res) => {
-                if (err) {
-                    console.error('Error loading image', src, err);
-                } else {
-                    this.parseImage(res, cb);
-                }
-            });
-        }
+        let sparkImage = sparkscene.create({t:"image",url:src});
+        const sparkGl = this.stage.gl;
+        sparkImage.ready.then( function(obj) {
+            let texture = sparkImage.texture();
+            cb(null, {source: sparkGl.createWebGLTexture(texture), w: sparkImage.resource.w, h: sparkImage.resource.h, premultiplyAlpha: false, flipBlueRed: false, internal: sparkImage});
+        });
     }
+
+    createRoundRect(cb, stage, w, h, radius, strokeWidth, strokeColor, fill, fillColor) {
+        if (fill === undefined) fill = true;
+        if (strokeWidth === undefined) strokeWidth = 0;
+
+        fillColor = fill ? fillColor : "none";
+        var boundW = w;
+        var boundH = h;
+        var data = "data:image/svg,"+'<svg viewBox="0 0 '+boundW+' '+boundH+'" xmlns="http://www.w3.org/2000/svg"><rect width="'+w+'" height="'+h+'" fill="'+fillColor+'" rx="'+radius+'" stroke="'+strokeColor+'" stroke-width="'+strokeWidth+'"/></svg>';
     
-    parseImage(data, cb) {
-        let img = new canvas.Image();
-        img.src = data;
-        let buf = img.rawData;
-        cb(null, {source: buf, w: img.width, h: img.height, premultiplyAlpha: false, flipBlueRed: true});
+        var imageObj = sparkscene.create({ t: "image", url:data});
+        imageObj.ready.then( function(obj) {
+            imageObj.w = w;
+            imageObj.h = h;
+            cb(null, imageObj);
+        });
+    }
+
+    createShadowRect(cb, stage, w, h, radius, blur, margin) {
+        var boundW = w + margin * 2;
+        var boundH = h + margin * 2;
+        var data = "data:image/svg,"+
+            '<svg viewBox="0 0 '+boundW+' '+boundH+'" xmlns="http://www.w3.org/2000/svg" version="1.1"> \
+                    <linearGradient id="rectGradient" gradientUnits="userSpaceOnUse" x1="0%" y1="180%" x2="100%" y2="-60%" gradientTransform="rotate(0)"> \
+                    <stop offset="20%" stop-color="#00FF00" stop-opacity="0.5"/> \
+                    <stop offset="50%" stop-color="#0000FF" stop-opacity=".8"/> \
+                    <stop offset="80%" stop-color="#00FF00" stop-opacity=".5"/> \
+                    </linearGradient> \
+                    <filter id="rectBlur" x="0" y="0"> \
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="'+blur+'" /> \
+                    </filter> \
+                </defs> \
+                <g enable-background="new" > \
+                    <rect x="0" y="0" width="'+boundW+'" height="'+boundH+'" fill="url(#rectGradient)"  rx="'+radius+'" stroke-width="'+margin+'" filter="url(#rectBlur)"/> \
+                </g> \
+                </svg>';
+    
+        var imageObj = sparkscene.create({ t: "image", url:data});
+        imageObj.ready.then( function(obj) {
+            imageObj.w = w;
+            imageObj.h = h;
+            cb(null, imageObj);
+        });
+    }
+
+    createSvg(cb, stage, url, w, h) {
+        var imageObj = sparkscene.create({ t: "image", url:ur});
+        imageObj.ready.then( function(obj) {
+            imageObj.w = w;
+            imageObj.h = h;
+            cb(null, imageObj);
+        }, function(obj) {
+            cb(null, imageObj);;
+        });
     }
 
     createWebGLContext(w, h) {
@@ -107,12 +126,15 @@ export default class SparkPlatform {
     }
 
     getTextureOptionsForDrawingCanvas(canvas) {
-        let options = {}
-        options.source = canvas.toBuffer('raw');
-        options.w = canvas.width;
-        options.h = canvas.height;
+        let options = {};
+
+        options.source = this.stage.gl.createWebGLTexture(canvas.texture());
+        options.w = canvas.w;
+        options.h = canvas.h;
         options.premultiplyAlpha = false;
-        options.flipBlueRed = true;
+        options.flipBlueRed = false
+        options.internal = canvas;
+
         return options;
     }
 
