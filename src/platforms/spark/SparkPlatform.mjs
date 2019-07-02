@@ -69,8 +69,8 @@ export default class SparkPlatform {
         imageObj.ready.then( function(obj) {
             let canvas = {};
             canvas.internal = imageObj;
-            canvas.w = w;
-            canvas.h = h;
+            canvas.width = w;
+            canvas.height = h;
             imageObj.w = w;
             imageObj.h = h;
             cb(null, canvas);
@@ -100,8 +100,8 @@ export default class SparkPlatform {
         imageObj.ready.then( function(obj) {
             let canvas = {};
             canvas.internal = imageObj;
-            canvas.w = w;
-            canvas.h = h;
+            canvas.width = w;
+            canvas.height = h;
             imageObj.w = w;
             imageObj.h = h;
             cb(null, canvas);
@@ -113,8 +113,8 @@ export default class SparkPlatform {
         imageObj.ready.then( function(obj) {
             let canvas = {};
             canvas.internal = imageObj;
-            canvas.w = w;
-            canvas.h = h;
+            canvas.width = w;
+            canvas.height = h;
             imageObj.w = w;
             imageObj.h = h;
             cb(null, canvas);
@@ -145,8 +145,8 @@ export default class SparkPlatform {
         if (canvas && canvas.internal)
         {
             options.source = this.stage.gl.createWebGLTexture(canvas.internal.texture());
-            options.w = canvas.w;
-            options.h = canvas.h;
+            options.w = canvas.width;
+            options.h = canvas.height;
             options.internal = canvas.internal;
         }
         options.premultiplyAlpha = false;
@@ -185,6 +185,8 @@ export default class SparkPlatform {
                 renderInfo.w = sparkText.w;
                 renderInfo.h = sparkText.h;
                 textTextureRender._canvas.internal = sparkText;
+                textTextureRender._canvas.width = sparkText.w;
+                textTextureRender._canvas.height = sparkText.h;
                 textTextureRender.renderInfo = renderInfo;
                 resolve();
             });
