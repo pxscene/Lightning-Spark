@@ -1,5 +1,4 @@
 import fs from "fs";
-import canvas from "canvas";
 import http from "http";
 import https from "https";
 
