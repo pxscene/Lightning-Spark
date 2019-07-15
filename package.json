@@ -4,7 +4,6 @@
   "version": "1.0.0",
   "license": "apache",
   "dependencies": {
-    "canvas": "https://github.com/basvanmeurs/node-canvas.git",
     "rollup": "^1.10.0",
     "wpe-lightning": "https://github.com/pxscene/Lightning.git#spark"
   },
