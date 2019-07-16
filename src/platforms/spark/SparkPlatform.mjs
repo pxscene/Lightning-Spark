@@ -176,16 +176,16 @@ export default class SparkPlatform {
 
     drawText(textTextureRender)
     {
-        let sparkText = sparkscene.create({ t: "text", text:textTextureRender._settings.text, pixelSize:textTextureRender._settings.fontSize});
+        let sparkText = sparkscene.create({ t: "text", text:textTextureRender._settings.text, pixelSize:textTextureRender._settings.fontSize*textTextureRender.getPrecision()});
 
         let drawPromise = new Promise(function(resolve, reject) {
             sparkText.ready.then( function(obj) {
                 let renderInfo = {};
                 renderInfo.w = sparkText.w;
                 renderInfo.h = sparkText.h;
+                textTextureRender._canvas.w = sparkText.w;
+                textTextureRender._canvas.h = sparkText.h;
                 textTextureRender._canvas.internal = sparkText;
-                textTextureRender._canvas.width = sparkText.w;
-                textTextureRender._canvas.height = sparkText.h;
                 textTextureRender.renderInfo = renderInfo;
                 resolve();
             });
