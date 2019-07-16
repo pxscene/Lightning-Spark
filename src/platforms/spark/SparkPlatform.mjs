@@ -183,8 +183,8 @@ export default class SparkPlatform {
                 let renderInfo = {};
                 renderInfo.w = sparkText.w;
                 renderInfo.h = sparkText.h;
-                textTextureRender._canvas.w = sparkText.w;
-                textTextureRender._canvas.h = sparkText.h;
+                textTextureRender._canvas.width = sparkText.w;
+                textTextureRender._canvas.height = sparkText.h;
                 textTextureRender._canvas.internal = sparkText;
                 textTextureRender.renderInfo = renderInfo;
                 resolve();
