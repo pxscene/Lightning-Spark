@@ -1,8 +1,8 @@
-import lng from "wpe-lightning/src/lightning.mjs";
+//import lng from "wpe-lightning/src/lightning.mjs";
 import SparkPlatform from "./platforms/spark/SparkPlatform.mjs"
 
-const lightning = lng;
+const lightning = SparkPlatform;
 
-lightning.Stage.platform = SparkPlatform;
+//lightning.Stage.platform = SparkPlatform;
 
 export default lightning;
