@@ -51,7 +51,7 @@ export default class SparkPlatform {
         const sparkGl = this.stage.gl;
         sparkImage.ready.then( function(obj) {
             let texture = sparkImage.texture();
-            cb(null, {source: sparkGl.createWebGLTexture(texture), w: sparkImage.resource.w, h: sparkImage.resource.h, premultiplyAlpha: false, flipBlueRed: false, internal: sparkImage});
+            cb(null, {source: sparkGl.createWebGLTexture(texture), w: sparkImage.resource.w, h: sparkImage.resource.h, premultiplyAlpha: false, flipBlueRed: false, imageRef: sparkImage});
         });
     }
 
