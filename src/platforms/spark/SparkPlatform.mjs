@@ -146,7 +146,7 @@ export default class SparkPlatform {
             options.source = this.stage.gl.createWebGLTexture(canvas.internal.texture());
             options.w = canvas.width;
             options.h = canvas.height;
-            options.internal = canvas.internal;
+            options.imageRef = canvas.internal;
         }
         options.premultiplyAlpha = false;
         options.flipBlueRed = false;
