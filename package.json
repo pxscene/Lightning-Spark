@@ -4,8 +4,7 @@
   "version": "1.0.0",
   "license": "apache",
   "dependencies": {
-    "rollup": "^1.10.0",
-    "wpe-lightning": "https://github.com/pxscene/Lightning.git#spark"
+    "rollup": "^1.10.0"
   },
   "main": "src/lightning.mjs",
   "scripts": {
