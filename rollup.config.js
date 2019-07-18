@@ -1,7 +1,7 @@
 const resolve = require('rollup-plugin-node-resolve');
 
 export default {
-    input: './src/lightning-platform.mjs',
+    input: './src/lightning.mjs',
     plugins: [resolve({
         only: [ 'wpe-lightning' ]
     })],
