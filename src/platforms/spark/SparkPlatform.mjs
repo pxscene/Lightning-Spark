@@ -60,9 +60,17 @@ export default class SparkPlatform {
         if (strokeWidth === undefined) strokeWidth = 0;
 
         fillColor = fill ? fillColor : "none";
+        fillColor = "#" + fillColor.toString(16);
+        let opacity = 1;
+        if (fillColor.length >= 9)
+        {
+            opacity = "0x" + fillColor.substring(7, 9);
+            opacity = parseInt(opacity, 16) / 255;
+            fillColor = fillColor.substring(0, 7);
+        }
         let boundW = w;
         let boundH = h;
-        let data = "data:image/svg,"+'<svg viewBox="0 0 '+boundW+' '+boundH+'" xmlns="http://www.w3.org/2000/svg"><rect width="'+w+'" height="'+h+'" fill="'+fillColor+'" rx="'+radius+'" stroke="'+strokeColor+'" stroke-width="'+strokeWidth+'"/></svg>';
+        let data = "data:image/svg,"+'<svg viewBox="0 0 '+boundW+' '+boundH+'" xmlns="http://www.w3.org/2000/svg"><rect width="'+w+'" height="'+h+'" fill="'+fillColor+'" opacity="'+opacity+'" rx="'+radius+'" stroke="'+strokeColor+'" stroke-width="'+strokeWidth+'"/></svg>';
     
         let imageObj = sparkscene.create({ t: "image", url:data, flip:true});
         imageObj.ready.then( function(obj) {
