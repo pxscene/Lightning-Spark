@@ -181,5 +181,22 @@ export default class SparkPlatform {
     registerKeyHandler(keyhandler) {
         console.warn("No support for key handling");
     }
+
+    drawText(textTextureRenderer){
+        let sparkText = sparkscene.create({ t: "text", text:textTextureRenderer._settings.text, pixelSize:textTextureRenderer._settings.fontSize*textTextureRenderer.getPrecision()});
+
+        return new Promise((resolve, reject) => {
+            sparkText.ready.then( function(obj) {
+                let renderInfo = {};
+                renderInfo.w = sparkText.w;
+                renderInfo.h = sparkText.h;
+                textTextureRenderer._canvas.width = sparkText.w;
+                textTextureRenderer._canvas.height = sparkText.h;
+                textTextureRenderer._canvas.internal = sparkText;
+                textTextureRenderer.renderInfo = renderInfo;
+                resolve();
+            });
+        });
+    }
 }
 
