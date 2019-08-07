@@ -6,6 +6,6 @@ const lightning = lng;
 const sparkTextTextureRenderer = TextTextureRendererSpark;
 
 lightning.Stage.platform = SparkPlatform;
+lightning.Stage.textTextureRenderer = sparkTextTextureRenderer;
 
 export default lightning;
-export default sparkTextTextureRenderer;
