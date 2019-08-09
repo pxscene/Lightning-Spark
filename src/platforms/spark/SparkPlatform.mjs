@@ -59,7 +59,7 @@ export default class SparkPlatform {
         if (fill === undefined) fill = true;
         if (strokeWidth === undefined) strokeWidth = 0;
 
-        fillColor = fill ? fillColor : "none";
+        fillColor = fill ? fillColor : 0;
         fillColor = "#" + fillColor.toString(16);
         let opacity = 1;
         if (fillColor.length >= 9)
@@ -183,7 +183,27 @@ export default class SparkPlatform {
     }
 
     drawText(textTextureRenderer){
-        let sparkText = sparkscene.create({ t: "text", text:textTextureRenderer._settings.text, pixelSize:textTextureRenderer._settings.fontSize*textTextureRenderer.getPrecision()});
+        const precision = textTextureRenderer.getPrecision();
+        let highlight = textTextureRenderer._settings.highlight;
+        const fontSize = textTextureRenderer._settings.fontSize*textTextureRenderer.getPrecision();
+        let highlightColor = 0x00000000;
+        if (highlight)
+        {
+            highlightColor = textTextureRenderer._settings.highlightColor || 0x00000000;
+        }
+        let hlHeight = (textTextureRenderer._settings.highlightHeight * precision || fontSize * 1.5);
+        let hlOffset = (textTextureRenderer._settings.highlightOffset !== null ? textTextureRenderer._settings.highlightOffset * precision : -0.5 * fontSize);
+        const hlPaddingLeft = (textTextureRenderer._settings.highlightPaddingLeft !== null ? textTextureRenderer._settings.highlightPaddingLeft * precision : paddingLeft);
+        const hlPaddingRight = (textTextureRenderer._settings.highlightPaddingRight !== null ? textTextureRenderer._settings.highlightPaddingRight * precision : paddingRight);
+
+        let shadowColor = textTextureRenderer._settings.shadowColor;
+        let shadowOffsetX = textTextureRenderer._settings.shadowOffsetX * precision;
+        let shadowOffsetY = textTextureRenderer._settings.shadowOffsetY * precision;
+        let shadowBlur = textTextureRenderer._settings.shadowBlur * precision;
+        let textColor = textTextureRenderer._settings.textColor;
+        let sparkText = sparkscene.create({ t: "text", text:textTextureRenderer._settings.text, pixelSize:fontSize, textColor:textColor,
+            highlight:highlight, highlightColor:highlightColor , highlightOffset:hlOffset , highlightPaddingLeft:hlPaddingLeft , highlightPaddingRight:hlPaddingRight, highlightHeight:hlHeight,
+            shadow: textTextureRenderer._settings.shadow, shadowColor:shadowColor , shadowOffsetX:shadowOffsetX, shadowOffsetY:shadowOffsetY , shadowBlur:shadowBlur});
 
         return new Promise((resolve, reject) => {
             sparkText.ready.then( function(obj) {
