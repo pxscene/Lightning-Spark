@@ -60,17 +60,21 @@ export default class SparkPlatform {
         if (strokeWidth === undefined) strokeWidth = 0;
 
         fillColor = fill ? fillColor : 0;
-        fillColor = "#" + fillColor.toString(16);
+        fillColor = fillColor.toString(16);
         let opacity = 1;
-        if (fillColor.length >= 9)
+        if (fillColor.length >= 8)
         {
-            opacity = "0x" + fillColor.substring(7, 9);
+            let alpha = fillColor.substring(0,2);
+            let red = fillColor.substring(2,4);
+            let green = fillColor.substring(4,6);
+            let blue = fillColor.substring(6);
+            fillColor = "#" + red + green + blue;
+            opacity = "0x"+alpha;
             opacity = parseInt(opacity, 16) / 255;
-            fillColor = fillColor.substring(0, 7);
         }
         let boundW = w;
         let boundH = h;
-        let data = "data:image/svg,"+'<svg viewBox="0 0 '+boundW+' '+boundH+'" xmlns="http://www.w3.org/2000/svg"><rect width="'+w+'" height="'+h+'" fill="'+fillColor+'" opacity="'+opacity+'" rx="'+radius+'" stroke="'+strokeColor+'" stroke-width="'+strokeWidth+'"/></svg>';
+        let data = "data:image/svg,"+'<svg viewBox="0 0 '+boundW+' '+boundH+'" xmlns="http://www.w3.org/2000/svg"><rect width="'+w+'" height="'+h+'" fill="'+fillColor+'" fill-opacity="'+opacity+'" rx="'+radius+'" stroke="'+strokeColor+'" stroke-width="'+strokeWidth+'"/></svg>';
     
         let imageObj = sparkscene.create({ t: "image", url:data, flip:true});
         imageObj.ready.then( function(obj) {
@@ -186,7 +190,7 @@ export default class SparkPlatform {
         const precision = textTextureRenderer.getPrecision();
         let highlight = textTextureRenderer._settings.highlight;
         const fontSize = textTextureRenderer._settings.fontSize*textTextureRenderer.getPrecision();
-        let highlightColor = 0x00000000;
+        let highlightColor = 0xFF000000;
         if (highlight)
         {
             highlightColor = textTextureRenderer._settings.highlightColor || 0x00000000;
@@ -201,6 +205,9 @@ export default class SparkPlatform {
         let shadowOffsetY = textTextureRenderer._settings.shadowOffsetY * precision;
         let shadowBlur = textTextureRenderer._settings.shadowBlur * precision;
         let textColor = textTextureRenderer._settings.textColor;
+
+        highlightColor = "0x" + highlightColor.toString(16);
+        shadowColor = "0x" + shadowColor.toString(16);
         let sparkText = sparkscene.create({ t: "text", text:textTextureRenderer._settings.text, pixelSize:fontSize, textColor:textColor,
             highlight:highlight, highlightColor:highlightColor , highlightOffset:hlOffset , highlightPaddingLeft:hlPaddingLeft , highlightPaddingRight:hlPaddingRight, highlightHeight:hlHeight,
             shadow: textTextureRenderer._settings.shadow, shadowColor:shadowColor , shadowOffsetX:shadowOffsetX, shadowOffsetY:shadowOffsetY , shadowBlur:shadowBlur});
