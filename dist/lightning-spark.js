@@ -1,8 +1,5 @@
 'use strict';
 
-function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
-
-var lng = _interopDefault(require('wpe-lightning/src/lightning.mjs'));
 require('fs');
 require('http');
 require('https');
@@ -204,8 +201,4 @@ class SparkPlatform {
     }
 }
 
-const lightning = lng;
-
-lightning.Stage.platform = SparkPlatform;
-
-module.exports = lightning;
+global.LIGHTNING_PLATFORM = SparkPlatform;

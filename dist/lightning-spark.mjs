@@ -1,4 +1,3 @@
-import lng from 'wpe-lightning/src/lightning.mjs';
 import 'fs';
 import 'http';
 import 'https';
@@ -200,8 +199,4 @@ class SparkPlatform {
     }
 }
 
-const lightning = lng;
-
-lightning.Stage.platform = SparkPlatform;
-
-export default lightning;
+global.LIGHTNING_PLATFORM = SparkPlatform;
