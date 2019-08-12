@@ -6,8 +6,8 @@ export default {
         only: [ 'wpe-lightning' ]
     })],
     output: {
-        file: './dist/lightning-spark.js',
-        format: 'cjs',
+        file: './dist/lightning-spark.mjs',
+        format: 'esm',
         name: 'lng'
     }
 };
