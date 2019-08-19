@@ -205,6 +205,16 @@ export default class SparkPlatform {
         let shadowOffsetY = textTextureRenderer._settings.shadowOffsetY * precision;
         let shadowBlur = textTextureRenderer._settings.shadowBlur * precision;
         let textColor = textTextureRenderer._settings.textColor;
+        let textColorTemp = textColor.toString(16);
+        if (textColorTemp.length >= 8)
+        {
+            let alpha = textColorTemp.substring(0,2);
+            let red = textColorTemp.substring(2,4);
+            let green = textColorTemp.substring(4,6);
+            let blue = textColorTemp.substring(6);
+            textColorTemp = "0x" + red + green + blue + alpha;
+            textColor = parseInt(textColorTemp,16);
+        }
 
         highlightColor = "0x" + highlightColor.toString(16);
         shadowColor = "0x" + shadowColor.toString(16);
