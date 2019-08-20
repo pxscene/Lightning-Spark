@@ -47,7 +47,7 @@ export default class SparkPlatform {
     }
 
     loadSrcTexture({src}, cb) {
-        let sparkImage = sparkscene.create({t:"image",url:src, flip:true});
+        let sparkImage = sparkscene.create({t:"image", flip:true, url:src});
         const sparkGl = this.stage.gl;
         sparkImage.ready.then( function(obj) {
             let texture = sparkImage.texture();
@@ -76,7 +76,7 @@ export default class SparkPlatform {
         let boundH = h;
         let data = "data:image/svg,"+'<svg viewBox="0 0 '+boundW+' '+boundH+'" xmlns="http://www.w3.org/2000/svg"><rect width="'+w+'" height="'+h+'" fill="'+fillColor+'" fill-opacity="'+opacity+'" rx="'+radius+'" stroke="'+strokeColor+'" stroke-width="'+strokeWidth+'"/></svg>';
     
-        let imageObj = sparkscene.create({ t: "image", url:data, flip:true});
+        let imageObj = sparkscene.create({ t: "image", flip:true, url:data});
         imageObj.ready.then( function(obj) {
             let canvas = {};
             canvas.internal = imageObj;
@@ -107,7 +107,7 @@ export default class SparkPlatform {
                 </g> \
                 </svg>';
     
-        let imageObj = sparkscene.create({ t: "image", url:data, flip:true});
+        let imageObj = sparkscene.create({ t: "image", flip:true, url:data});
         imageObj.ready.then( function(obj) {
             let canvas = {};
             canvas.internal = imageObj;
@@ -120,7 +120,7 @@ export default class SparkPlatform {
     }
 
     createSvg(cb, stage, url, w, h) {
-        let imageObj = sparkscene.create({ t: "image", url:url, flip:true});
+        let imageObj = sparkscene.create({ t: "image", flip:true, url:url});
         imageObj.ready.then( function(obj) {
             let canvas = {};
             canvas.internal = imageObj;
