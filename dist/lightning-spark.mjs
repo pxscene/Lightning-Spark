@@ -1,8 +1,6 @@
-'use strict';
-
-require('fs');
-require('http');
-require('https');
+import 'fs';
+import 'http';
+import 'https';
 
 class SparkPlatform {
     
