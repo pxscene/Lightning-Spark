@@ -47,11 +47,11 @@ export default class SparkPlatform {
     }
 
     loadSrcTexture({src}, cb) {
-        let sparkImage = sparkscene.create({t:"image",url:src});
+        let sparkImage = sparkscene.create({t:"image", flip:true, url:src});
         const sparkGl = this.stage.gl;
         sparkImage.ready.then( function(obj) {
             let texture = sparkImage.texture();
-            cb(null, {source: sparkGl.createWebGLTexture(texture), w: sparkImage.resource.w, h: sparkImage.resource.h, premultiplyAlpha: false, flipBlueRed: false, internal: sparkImage});
+            cb(null, {source: sparkGl.createWebGLTexture(texture), w: sparkImage.resource.w, h: sparkImage.resource.h, premultiplyAlpha: false, flipBlueRed: false, imageRef: sparkImage});
         });
     }
 
@@ -59,12 +59,24 @@ export default class SparkPlatform {
         if (fill === undefined) fill = true;
         if (strokeWidth === undefined) strokeWidth = 0;
 
-        fillColor = fill ? fillColor : "none";
+        fillColor = fill ? fillColor : 0;
+        fillColor = fillColor.toString(16);
+        let opacity = 1;
+        if (fillColor.length >= 8)
+        {
+            let alpha = fillColor.substring(0,2);
+            let red = fillColor.substring(2,4);
+            let green = fillColor.substring(4,6);
+            let blue = fillColor.substring(6);
+            fillColor = "#" + red + green + blue;
+            opacity = "0x"+alpha;
+            opacity = parseInt(opacity, 16) / 255;
+        }
         let boundW = w;
         let boundH = h;
-        let data = "data:image/svg,"+'<svg viewBox="0 0 '+boundW+' '+boundH+'" xmlns="http://www.w3.org/2000/svg"><rect width="'+w+'" height="'+h+'" fill="'+fillColor+'" rx="'+radius+'" stroke="'+strokeColor+'" stroke-width="'+strokeWidth+'"/></svg>';
+        let data = "data:image/svg,"+'<svg viewBox="0 0 '+boundW+' '+boundH+'" xmlns="http://www.w3.org/2000/svg"><rect width="'+w+'" height="'+h+'" fill="'+fillColor+'" fill-opacity="'+opacity+'" rx="'+radius+'" stroke="'+strokeColor+'" stroke-width="'+strokeWidth+'"/></svg>';
     
-        let imageObj = sparkscene.create({ t: "image", url:data});
+        let imageObj = sparkscene.create({ t: "image", flip:true, url:data});
         imageObj.ready.then( function(obj) {
             let canvas = {};
             canvas.internal = imageObj;
@@ -95,7 +107,7 @@ export default class SparkPlatform {
                 </g> \
                 </svg>';
     
-        let imageObj = sparkscene.create({ t: "image", url:data});
+        let imageObj = sparkscene.create({ t: "image", flip:true, url:data});
         imageObj.ready.then( function(obj) {
             let canvas = {};
             canvas.internal = imageObj;
@@ -108,7 +120,7 @@ export default class SparkPlatform {
     }
 
     createSvg(cb, stage, url, w, h) {
-        let imageObj = sparkscene.create({ t: "image", url:ur});
+        let imageObj = sparkscene.create({ t: "image", flip:true, url:url});
         imageObj.ready.then( function(obj) {
             let canvas = {};
             canvas.internal = imageObj;
@@ -146,7 +158,7 @@ export default class SparkPlatform {
             options.source = this.stage.gl.createWebGLTexture(canvas.internal.texture());
             options.w = canvas.width;
             options.h = canvas.height;
-            options.internal = canvas.internal;
+            options.imageRef = canvas.internal;
         }
         options.premultiplyAlpha = false;
         options.flipBlueRed = false;
@@ -174,24 +186,54 @@ export default class SparkPlatform {
         console.warn("No support for key handling");
     }
 
-    drawText(textTextureRender)
-    {
-        let sparkText = sparkscene.create({ t: "text", text:textTextureRender._settings.text, pixelSize:textTextureRender._settings.fontSize*textTextureRender.getPrecision()});
+    drawText(textTextureRenderer){
+        const precision = textTextureRenderer.getPrecision();
+        let highlight = textTextureRenderer._settings.highlight;
+        const fontSize = textTextureRenderer._settings.fontSize*textTextureRenderer.getPrecision();
+        let highlightColor = 0xFF000000;
+        if (highlight)
+        {
+            highlightColor = textTextureRenderer._settings.highlightColor || 0x00000000;
+        }
+        let hlHeight = (textTextureRenderer._settings.highlightHeight * precision || fontSize * 1.5);
+        let hlOffset = (textTextureRenderer._settings.highlightOffset !== null ? textTextureRenderer._settings.highlightOffset * precision : -0.5 * fontSize);
+        const hlPaddingLeft = (textTextureRenderer._settings.highlightPaddingLeft !== null ? textTextureRenderer._settings.highlightPaddingLeft * precision : paddingLeft);
+        const hlPaddingRight = (textTextureRenderer._settings.highlightPaddingRight !== null ? textTextureRenderer._settings.highlightPaddingRight * precision : paddingRight);
 
-        let drawPromise = new Promise(function(resolve, reject) {
+        let shadowColor = textTextureRenderer._settings.shadowColor;
+        let shadowOffsetX = textTextureRenderer._settings.shadowOffsetX * precision;
+        let shadowOffsetY = textTextureRenderer._settings.shadowOffsetY * precision;
+        let shadowBlur = textTextureRenderer._settings.shadowBlur * precision;
+        let textColor = textTextureRenderer._settings.textColor;
+        let textColorTemp = textColor.toString(16);
+        if (textColorTemp.length >= 8)
+        {
+            let alpha = textColorTemp.substring(0,2);
+            let red = textColorTemp.substring(2,4);
+            let green = textColorTemp.substring(4,6);
+            let blue = textColorTemp.substring(6);
+            textColorTemp = "0x" + red + green + blue + alpha;
+            textColor = parseInt(textColorTemp,16);
+        }
+
+        highlightColor = "0x" + highlightColor.toString(16);
+        shadowColor = "0x" + shadowColor.toString(16);
+        let sparkText = sparkscene.create({ t: "text", text:textTextureRenderer._settings.text, pixelSize:fontSize, textColorHint:textColor,
+            highlight:highlight, highlightColor:highlightColor , highlightOffset:hlOffset , highlightPaddingLeft:hlPaddingLeft , highlightPaddingRight:hlPaddingRight, highlightHeight:hlHeight,
+            shadow: textTextureRenderer._settings.shadow, shadowColor:shadowColor , shadowOffsetX:shadowOffsetX, shadowOffsetY:shadowOffsetY , shadowBlur:shadowBlur});
+
+        return new Promise((resolve, reject) => {
             sparkText.ready.then( function(obj) {
                 let renderInfo = {};
                 renderInfo.w = sparkText.w;
                 renderInfo.h = sparkText.h;
-                textTextureRender._canvas.width = sparkText.w;
-                textTextureRender._canvas.height = sparkText.h;
-                textTextureRender._canvas.internal = sparkText;
-                textTextureRender.renderInfo = renderInfo;
+                textTextureRenderer._canvas.width = sparkText.w;
+                textTextureRenderer._canvas.height = sparkText.h;
+                textTextureRenderer._canvas.internal = sparkText;
+                textTextureRenderer.renderInfo = renderInfo;
                 resolve();
             });
         });
-        return drawPromise;
     }
-
 }
 
