@@ -1,11 +1,8 @@
 'use strict';
 
-function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
-
-var fs = _interopDefault(require('fs'));
-var canvas = _interopDefault(require('canvas'));
-var http = _interopDefault(require('http'));
-var https = _interopDefault(require('https'));
+require('fs');
+require('http');
+require('https');
 
 class StageUtils {
 
@@ -443,6 +440,7 @@ class Utils {
 Utils.isNode = (typeof window === "undefined");
 Utils.isWeb = (typeof window !== "undefined");
 Utils.isWPE = Utils.isWeb && (navigator.userAgent.indexOf("WPE") !== -1);
+Utils.isSpark = (typeof window === "undefined") && (typeof sparkscene !== "undefined");
 
 class Base {
 
@@ -2829,6 +2827,13 @@ class TextureSource {
          */
         this._loadError = null;
 
+        /**
+         *  Hold a reference to the javascript variable which contains the texture, this is not required for WebGL in WebBrowsers but is required for Spark runtime.
+         * @type {object}
+         * @private
+         */
+        this._imageRef = null;
+
     }
 
     get loadError() {
@@ -2993,6 +2998,9 @@ class TextureSource {
 
         this.permanent = !!options.permanent;
 
+        if (options && options.imageRef)
+            this._imageRef = options.imageRef;
+
         if (this._isNativeTexture(source)) {
             // Texture managed by caller.
             this._nativeTexture = source;
@@ -3051,6 +3059,8 @@ class TextureSource {
 
     clearNativeTexture() {
         this._nativeTexture = null;
+        //also clear the reference to the texture variable.
+        this._imageRef = null;
     }
 
     /**
@@ -5590,6 +5600,7 @@ EventEmitter.addAsMixin = function(cls) {
     cls.prototype.removeListener = EventEmitter.prototype.removeListener;
     cls.prototype.emit = EventEmitter.prototype.emit;
     cls.prototype.listenerCount = EventEmitter.prototype.listenerCount;
+    cls.prototype.removeAllListeners = EventEmitter.prototype.removeAllListeners;
 };
 
 class Shader {
@@ -5875,6 +5886,10 @@ class Texture {
             const reusable = this._getReusableTextureSource();
             if (reusable && reusable.isLoaded() && (reusable !== source)) {
                 this._replaceTextureSource(reusable);
+            }
+        } else {
+            if (this._resizeMode) {
+                this._applyResizeMode();
             }
         }
     }
@@ -6412,10 +6427,10 @@ class TextTextureRenderer {
         // We do not use a promise so that loading is performed syncronous when possible.
         const loadPromise = this._load();
         if (!loadPromise) {
-            this._draw();
+            return Utils.isSpark ? this._stage.platform.drawText(this) : this._draw();
         } else {
             return loadPromise.then(() => {
-                this._draw();
+                return Utils.isSpark ? this._stage.platform.drawText(this) : this._draw();
             });
         }
     }
@@ -16313,18 +16328,15 @@ class Stage extends EventEmitter {
 
         const changes = this.ctx.hasRenderUpdates();
 
+        // Update may cause textures to be loaded in sync, so by processing them here we may be able to show them
+        // during the current frame already.
+        this.textureThrottler.processSome();
+
         if (changes) {
             this._updatingFrame = true;
             this.ctx.update();
-
-            // Update may cause textures to be loaded in sync, so by processing them here we may be able to show them
-            // during the current frame already.
-            this.textureThrottler.processSome();
-
             this.ctx.render();
             this._updatingFrame = false;
-        } else {
-            this.textureThrottler.processSome();
         }
 
         this.platform.nextFrame(changes);
@@ -16816,7 +16828,11 @@ class Tools {
         }
 
         let factory = (cb, stage) => {
-            cb(null, this.createRoundRect(stage, w, h, radius, strokeWidth, strokeColor, fill, fillColor));
+            if (Utils.isSpark) {
+                stage.platform.createRoundRect(cb, stage, w, h, radius, strokeWidth, strokeColor, fill, fillColor);
+            } else {
+                cb(null, this.createRoundRect(stage, w, h, radius, strokeWidth, strokeColor, fill, fillColor));
+            }
         };
         let id = 'rect' + [w, h, strokeWidth, strokeColor, fill ? 1 : 0, fillColor].concat(radius).join(",");
         return Tools.getCanvasTexture(factory, id);
@@ -16876,7 +16892,11 @@ class Tools {
         }
 
         let factory = (cb, stage) => {
-            cb(null, this.createShadowRect(stage, w, h, radius, blur, margin));
+            if (Utils.isSpark) {
+                stage.platform.createShadowRect(cb, stage, w, h, radius, blur, margin);
+            } else {
+                cb(null, this.createShadowRect(stage, w, h, radius, blur, margin));
+            }
         };
         let id = 'shadow' + [w, h, blur, margin].concat(radius).join(",");
         return Tools.getCanvasTexture(factory, id);
@@ -16922,7 +16942,11 @@ class Tools {
 
     static getSvgTexture(url, w, h) {
         let factory = (cb, stage) => {
-            this.createSvg(cb, stage, url, w, h);
+            if (Utils.isSpark) {
+                stage.platform.createSvg(cb, stage, url, w, h);
+            } else {
+                this.createSvg(cb, stage, url, w, h);
+            }
         };
         let id = 'svg' + [w, h, url].join(",");
         return Tools.getCanvasTexture(factory, id);
@@ -20207,48 +20231,92 @@ class SparkPlatform {
     }
 
     loadSrcTexture({src}, cb) {
-        if (/^https?:\/\//i.test(src)) {
-            // URL. Download first.
-            let mod = null;
-            if (src.toLowerCase().indexOf("https:") === 0) {
-                mod = https;
-            } else {
-                mod = http;
-            }
-
-            mod.get(src, (res) => {
-                if (res.statusCode !== 200) {
-                    return cb(new Error("Status code " + res.statusCode + " for " + src));
-                }
-
-                let total = [];
-                res.on('data', (d) => {
-                    total.push(d);
-                });
-                res.on('end', () => {
-                    let buf = Buffer.concat(total);
-                    this.parseImage(buf, cb);
-                });
-            }).on('error', function(err) {
-                cb(err);
-            });
-        } else {
-            // File system.
-            fs.readFile(src, (err, res) => {
-                if (err) {
-                    console.error('Error loading image', src, err);
-                } else {
-                    this.parseImage(res, cb);
-                }
-            });
-        }
+        let sparkImage = sparkscene.create({t:"image", flip:true, url:src});
+        const sparkGl = this.stage.gl;
+        sparkImage.ready.then( function(obj) {
+            let texture = sparkImage.texture();
+            cb(null, {source: sparkGl.createWebGLTexture(texture), w: sparkImage.resource.w, h: sparkImage.resource.h, premultiplyAlpha: false, flipBlueRed: false, imageRef: sparkImage});
+        });
     }
+
+    createRoundRect(cb, stage, w, h, radius, strokeWidth, strokeColor, fill, fillColor) {
+        if (fill === undefined) fill = true;
+        if (strokeWidth === undefined) strokeWidth = 0;
+
+        fillColor = fill ? fillColor : 0;
+        fillColor = fillColor.toString(16);
+        let opacity = 1;
+        if (fillColor.length >= 8)
+        {
+            let alpha = fillColor.substring(0,2);
+            let red = fillColor.substring(2,4);
+            let green = fillColor.substring(4,6);
+            let blue = fillColor.substring(6);
+            fillColor = "#" + red + green + blue;
+            opacity = "0x"+alpha;
+            opacity = parseInt(opacity, 16) / 255;
+        }
+        let boundW = w;
+        let boundH = h;
+        let data = "data:image/svg,"+'<svg viewBox="0 0 '+boundW+' '+boundH+'" xmlns="http://www.w3.org/2000/svg"><rect width="'+w+'" height="'+h+'" fill="'+fillColor+'" fill-opacity="'+opacity+'" rx="'+radius+'" stroke="'+strokeColor+'" stroke-width="'+strokeWidth+'"/></svg>';
     
-    parseImage(data, cb) {
-        let img = new canvas.Image();
-        img.src = data;
-        let buf = img.rawData;
-        cb(null, {source: buf, w: img.width, h: img.height, premultiplyAlpha: false, flipBlueRed: true});
+        let imageObj = sparkscene.create({ t: "image", flip:true, url:data});
+        imageObj.ready.then( function(obj) {
+            let canvas = {};
+            canvas.internal = imageObj;
+            canvas.width = w;
+            canvas.height = h;
+            imageObj.w = w;
+            imageObj.h = h;
+            cb(null, canvas);
+        });
+    }
+
+    createShadowRect(cb, stage, w, h, radius, blur, margin) {
+        let boundW = w + margin * 2;
+        let boundH = h + margin * 2;
+        let data = "data:image/svg,"+
+            '<svg viewBox="0 0 '+boundW+' '+boundH+'" xmlns="http://www.w3.org/2000/svg" version="1.1"> \
+                    <linearGradient id="rectGradient" gradientUnits="userSpaceOnUse" x1="0%" y1="180%" x2="100%" y2="-60%" gradientTransform="rotate(0)"> \
+                    <stop offset="20%" stop-color="#00FF00" stop-opacity="0.5"/> \
+                    <stop offset="50%" stop-color="#0000FF" stop-opacity=".8"/> \
+                    <stop offset="80%" stop-color="#00FF00" stop-opacity=".5"/> \
+                    </linearGradient> \
+                    <filter id="rectBlur" x="0" y="0"> \
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="'+blur+'" /> \
+                    </filter> \
+                </defs> \
+                <g enable-background="new" > \
+                    <rect x="0" y="0" width="'+boundW+'" height="'+boundH+'" fill="url(#rectGradient)"  rx="'+radius+'" stroke-width="'+margin+'" filter="url(#rectBlur)"/> \
+                </g> \
+                </svg>';
+    
+        let imageObj = sparkscene.create({ t: "image", flip:true, url:data});
+        imageObj.ready.then( function(obj) {
+            let canvas = {};
+            canvas.internal = imageObj;
+            canvas.width = w;
+            canvas.height = h;
+            imageObj.w = w;
+            imageObj.h = h;
+            cb(null, canvas);
+        });
+    }
+
+    createSvg(cb, stage, url, w, h) {
+        let imageObj = sparkscene.create({ t: "image", flip:true, url:url});
+        imageObj.ready.then( function(obj) {
+            let canvas = {};
+            canvas.internal = imageObj;
+            canvas.width = w;
+            canvas.height = h;
+            imageObj.w = w;
+            imageObj.h = h;
+            cb(null, canvas);
+        }, function(obj) {
+            let canvas = {};
+            canvas.internal = imageObj;
+            cb(null, canvas);        });
     }
 
     createWebGLContext(w, h) {
@@ -20267,11 +20335,17 @@ class SparkPlatform {
 
     getTextureOptionsForDrawingCanvas(canvas) {
         let options = {};
-        options.source = canvas.toBuffer('raw');
-        options.w = canvas.width;
-        options.h = canvas.height;
+
+        if (canvas && canvas.internal)
+        {
+            options.source = this.stage.gl.createWebGLTexture(canvas.internal.texture());
+            options.w = canvas.width;
+            options.h = canvas.height;
+            options.imageRef = canvas.internal;
+        }
         options.premultiplyAlpha = false;
-        options.flipBlueRed = true;
+        options.flipBlueRed = false;
+
         return options;
     }
 
@@ -20281,8 +20355,9 @@ class SparkPlatform {
     }
 
     getDrawingCanvas() {
-        // We can't reuse this canvas because textures may load async.
-        return new canvas.Canvas(0, 0);
+        let canvas = {};
+        canvas.getContext = function() {};
+        return canvas;
     }
 
     nextFrame(changes) {
@@ -20294,6 +20369,55 @@ class SparkPlatform {
         console.warn("No support for key handling");
     }
 
+    drawText(textTextureRenderer){
+        const precision = textTextureRenderer.getPrecision();
+        let highlight = textTextureRenderer._settings.highlight;
+        const fontSize = textTextureRenderer._settings.fontSize*textTextureRenderer.getPrecision();
+        let highlightColor = 0xFF000000;
+        if (highlight)
+        {
+            highlightColor = textTextureRenderer._settings.highlightColor || 0x00000000;
+        }
+        let hlHeight = (textTextureRenderer._settings.highlightHeight * precision || fontSize * 1.5);
+        let hlOffset = (textTextureRenderer._settings.highlightOffset !== null ? textTextureRenderer._settings.highlightOffset * precision : -0.5 * fontSize);
+        const hlPaddingLeft = (textTextureRenderer._settings.highlightPaddingLeft !== null ? textTextureRenderer._settings.highlightPaddingLeft * precision : paddingLeft);
+        const hlPaddingRight = (textTextureRenderer._settings.highlightPaddingRight !== null ? textTextureRenderer._settings.highlightPaddingRight * precision : paddingRight);
+
+        let shadowColor = textTextureRenderer._settings.shadowColor;
+        let shadowOffsetX = textTextureRenderer._settings.shadowOffsetX * precision;
+        let shadowOffsetY = textTextureRenderer._settings.shadowOffsetY * precision;
+        let shadowBlur = textTextureRenderer._settings.shadowBlur * precision;
+        let textColor = textTextureRenderer._settings.textColor;
+        let textColorTemp = textColor.toString(16);
+        if (textColorTemp.length >= 8)
+        {
+            let alpha = textColorTemp.substring(0,2);
+            let red = textColorTemp.substring(2,4);
+            let green = textColorTemp.substring(4,6);
+            let blue = textColorTemp.substring(6);
+            textColorTemp = "0x" + red + green + blue + alpha;
+            textColor = parseInt(textColorTemp,16);
+        }
+
+        highlightColor = "0x" + highlightColor.toString(16);
+        shadowColor = "0x" + shadowColor.toString(16);
+        let sparkText = sparkscene.create({ t: "text", text:textTextureRenderer._settings.text, pixelSize:fontSize, textColorHint:textColor,
+            highlight:highlight, highlightColor:highlightColor , highlightOffset:hlOffset , highlightPaddingLeft:hlPaddingLeft , highlightPaddingRight:hlPaddingRight, highlightHeight:hlHeight,
+            shadow: textTextureRenderer._settings.shadow, shadowColor:shadowColor , shadowOffsetX:shadowOffsetX, shadowOffsetY:shadowOffsetY , shadowBlur:shadowBlur});
+
+        return new Promise((resolve, reject) => {
+            sparkText.ready.then( function(obj) {
+                let renderInfo = {};
+                renderInfo.w = sparkText.w;
+                renderInfo.h = sparkText.h;
+                textTextureRenderer._canvas.width = sparkText.w;
+                textTextureRenderer._canvas.height = sparkText.h;
+                textTextureRenderer._canvas.internal = sparkText;
+                textTextureRenderer.renderInfo = renderInfo;
+                resolve();
+            });
+        });
+    }
 }
 
 const lightning$1 = lightning;

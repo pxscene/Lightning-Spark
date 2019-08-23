@@ -9,7 +9,8 @@
   },
   "main": "src/lightning.mjs",
   "scripts": {
-    "postinstall": "rollup -c"
+    "postinstall": "rollup -c",
+    "build": "rollup -c"
   },
   "repository": {
     "type": "git",
