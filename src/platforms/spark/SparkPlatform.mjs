@@ -8,6 +8,7 @@ export default class SparkPlatform {
         this.stage = stage;
         this._looping = false;
         this._awaitingLoop = false;
+        this._sparkCanvas = null;
     }
 
     destroy() {
@@ -172,9 +173,21 @@ export default class SparkPlatform {
     }
 
     getDrawingCanvas() {
-        let canvas = {};
-        canvas.getContext = function() {};
-        return canvas;
+        let sparkCanvas;
+        let reuse = false; // We don't reuse this canvas because textures may load async.
+        if (!reuse) {
+            this._sparkCanvas = null;
+        }
+        if (this._sparkCanvas === null) {
+            sparkCanvas = sparkscene.create({t: "textCanvas"});
+            sparkCanvas.label = Date.now().toString();
+            sparkCanvas.colorMode = "ARGB";
+            this._sparkCanvas = sparkCanvas;
+            this._sparkCanvas.getContext = function() {
+                return sparkCanvas; // We don't have contexts in Spark, so returning the canvas itself
+            }
+        }
+        return this._sparkCanvas;
     }
 
     nextFrame(changes) {
@@ -187,53 +200,229 @@ export default class SparkPlatform {
     }
 
     drawText(textTextureRenderer){
+        let canvasInternal = textTextureRenderer._canvas; // _canvas is a pxTextCanvas object crated in getDrawingCanvas()
+        let platform = this;
+        let drawPromise = new Promise((resolve, reject) => {
+            canvasInternal.ready.then( function(obj) { // waiting for the empty scene
+                canvasInternal.parent = sparkscene.root;
+                canvasInternal.pixelSize = textTextureRenderer._settings.fontSize*textTextureRenderer.getPrecision();
+                //textTextureRenderer._settings.offsetY === NaN ? null : textTextureRenderer._settings.offsetY;
+                // Lightining drawing begins here
+                let renderInfo = {};
         const precision = textTextureRenderer.getPrecision();
-        let highlight = textTextureRenderer._settings.highlight;
-        const fontSize = textTextureRenderer._settings.fontSize*textTextureRenderer.getPrecision();
-        let highlightColor = 0xFF000000;
-        if (highlight)
-        {
-            highlightColor = textTextureRenderer._settings.highlightColor || 0x00000000;
+                let paddingLeft = textTextureRenderer._settings.paddingLeft * precision;
+                let paddingRight = textTextureRenderer._settings.paddingRight * precision;
+                const fontSize = textTextureRenderer._settings.fontSize * precision;
+                let offsetY = textTextureRenderer._settings.offsetY === null ? null : (textTextureRenderer._settings.offsetY * precision);
+                let lineHeight = textTextureRenderer._settings.lineHeight * precision;
+                const w = textTextureRenderer._settings.w * precision;
+                const h = textTextureRenderer._settings.h * precision;
+                let wordWrapWidth = textTextureRenderer._settings.wordWrapWidth * precision;
+                const cutSx = textTextureRenderer._settings.cutSx * precision;
+                const cutEx = textTextureRenderer._settings.cutEx * precision;
+                const cutSy = textTextureRenderer._settings.cutSy * precision;
+                const cutEy = textTextureRenderer._settings.cutEy * precision;
+
+                /// DBG Spark.
+                canvasInternal.label = textTextureRenderer._settings.text.slice(0, 10) + '..';
+                // Set font properties.
+                textTextureRenderer.setFontProperties();
+                // Total width.
+                let width = w || (2048 / textTextureRenderer.getPrecision());
+                // Inner width.
+                let innerWidth = width - (paddingLeft);
+                if (innerWidth < 10) {
+                    width += (10 - innerWidth);
+                    innerWidth += (10 - innerWidth);
+                }
+                if (!wordWrapWidth) {
+                    wordWrapWidth = innerWidth;
+                }
+                // word wrap
+                // preserve original text
+                let linesInfo;
+                if (textTextureRenderer._settings.wordWrap) {
+                    linesInfo = textTextureRenderer.wrapText(textTextureRenderer._settings.text, wordWrapWidth);
+                } else {
+                    linesInfo = {l: textTextureRenderer._settings.text.split(/(?:\r\n|\r|\n)/), n: []};
+                    let n = linesInfo.l.length;
+                    for (let i = 0; i < n - 1; i++) {
+                        linesInfo.n.push(i);
+                    }
+                }
+                let lines = linesInfo.l;
+                if (textTextureRenderer._settings.maxLines && lines.length > textTextureRenderer._settings.maxLines) {
+                    let usedLines = lines.slice(0, textTextureRenderer._settings.maxLines);
+                    let otherLines = null;
+                    if (textTextureRenderer._settings.maxLinesSuffix) {
+                        // Wrap again with max lines suffix enabled.
+                        let w = textTextureRenderer._settings.maxLinesSuffix ? textTextureRenderer._context.measureText(textTextureRenderer._settings.maxLinesSuffix).width : 0;
+                        let al = textTextureRenderer.wrapText(usedLines[usedLines.length - 1], wordWrapWidth - w);
+                        usedLines[usedLines.length - 1] = al.l[0] + textTextureRenderer._settings.maxLinesSuffix;
+                        otherLines = [al.l.length > 1 ? al.l[1] : ''];
+                    } else {
+                        otherLines = [''];
+                    }
+                    // Re-assemble the remaining text.
+                    let i, n = lines.length;
+                    let j = 0;
+                    let m = linesInfo.n.length;
+                    for (i = textTextureRenderer._settings.maxLines; i < n; i++) {
+                        otherLines[j] += (otherLines[j] ? " " : "") + lines[i];
+                        if (i + 1 < m && linesInfo.n[i + 1]) {
+                            j++;
+                        }
+                    }
+                    renderInfo.remainingText = otherLines.join("\n");
+                    renderInfo.moreTextLines = true;
+                    lines = usedLines;
+                } else {
+                    renderInfo.moreTextLines = false;
+                    renderInfo.remainingText = "";
+                }
+                // calculate text width
+                let maxLineWidth = 0;
+                let lineWidths = [];
+                for (let i = 0; i < lines.length; i++) {
+                    let lineWidth = textTextureRenderer._context.measureText(lines[i]).width;
+                    lineWidths.push(lineWidth);
+                    maxLineWidth = Math.max(maxLineWidth, lineWidth);
+                }
+                renderInfo.lineWidths = lineWidths;
+                if (!w) {
+                    // Auto-set width to max text length.
+                    width = maxLineWidth + paddingLeft + paddingRight;
+                    innerWidth = maxLineWidth;
+                }
+                // calculate text height
+                lineHeight = lineHeight || fontSize;
+                let height;
+                if (h) {
+                    height = h;
+                } else {
+                    height = lineHeight * (lines.length - 1) + 0.5 * fontSize + Math.max(lineHeight, fontSize) + offsetY;
+                }
+                if (offsetY === null) {
+                    offsetY = fontSize;
+                }
+                renderInfo.w = width;
+                renderInfo.h = height;
+                renderInfo.lines = lines;
+                renderInfo.precision = precision;
+                if (!width) {
+                    // To prevent canvas errors.
+                    width = 1;
+                }
+                if (!height) {
+                    // To prevent canvas errors.
+                    height = 1;
+                }
+                if (cutSx || cutEx) {
+                    width = Math.min(width, cutEx - cutSx);
+                }
+                if (cutSy || cutEy) {
+                    height = Math.min(height, cutEy - cutSy);
+                }
+                // Add extra margin to prevent issue with clipped text when scaling.
+                textTextureRenderer._canvas.width = Math.ceil(width + textTextureRenderer._stage.getOption('textRenderIssueMargin'));
+                textTextureRenderer._canvas.height = Math.ceil(height);
+                // Canvas context has been reset.
+                textTextureRenderer.setFontProperties();
+                if (fontSize >= 128) {
+                    // WpeWebKit bug: must force compositing because cairo-traps-compositor will not work with text first.
+                    textTextureRenderer._context.globalAlpha = 0.01;
+                    textTextureRenderer._context.fillRect(0, 0, 0.01, 0.01);
+                    textTextureRenderer._context.globalAlpha = 1.0;
+                }
+                if (cutSx || cutSy) {
+                    textTextureRenderer._context.translate(-cutSx, -cutSy);
+                }
+                let linePositionX;
+                let linePositionY;
+                let drawLines = [];
+                // Draw lines line by line.
+                for (let i = 0, n = lines.length; i < n; i++) {
+                    linePositionX = 0;
+                    linePositionY = (i * lineHeight) + offsetY;
+                    if (textTextureRenderer._settings.textAlign === 'right') {
+                        linePositionX += (innerWidth - lineWidths[i]);
+                    } else if (textTextureRenderer._settings.textAlign === 'center') {
+                        linePositionX += ((innerWidth - lineWidths[i]) / 2);
         }
+                    linePositionX += paddingLeft;
+                    drawLines.push({text: lines[i], x: linePositionX, y: linePositionY, w: lineWidths[i]});
+                }
+                // Highlight.
+                if (textTextureRenderer._settings.highlight) {
+                    let color = textTextureRenderer._settings.highlightColor || 0x00000000;
         let hlHeight = (textTextureRenderer._settings.highlightHeight * precision || fontSize * 1.5);
-        let hlOffset = (textTextureRenderer._settings.highlightOffset !== null ? textTextureRenderer._settings.highlightOffset * precision : -0.5 * fontSize);
+                    let offset = (textTextureRenderer._settings.highlightOffset !== null ? textTextureRenderer._settings.highlightOffset * precision : -0.5 * fontSize);
         const hlPaddingLeft = (textTextureRenderer._settings.highlightPaddingLeft !== null ? textTextureRenderer._settings.highlightPaddingLeft * precision : paddingLeft);
         const hlPaddingRight = (textTextureRenderer._settings.highlightPaddingRight !== null ? textTextureRenderer._settings.highlightPaddingRight * precision : paddingRight);
 
-        let shadowColor = textTextureRenderer._settings.shadowColor;
-        let shadowOffsetX = textTextureRenderer._settings.shadowOffsetX * precision;
-        let shadowOffsetY = textTextureRenderer._settings.shadowOffsetY * precision;
-        let shadowBlur = textTextureRenderer._settings.shadowBlur * precision;
-        let textColor = textTextureRenderer._settings.textColor;
-        let textColorTemp = textColor.toString(16);
-        if (textColorTemp.length >= 8)
-        {
-            let alpha = textColorTemp.substring(0,2);
-            let red = textColorTemp.substring(2,4);
-            let green = textColorTemp.substring(4,6);
-            let blue = textColorTemp.substring(6);
-            textColorTemp = "0x" + red + green + blue + alpha;
-            textColor = parseInt(textColorTemp,16);
+                    textTextureRenderer._context.fillStyle = color;
+                    for (let i = 0; i < drawLines.length; i++) {
+                        let drawLine = drawLines[i];
+                        textTextureRenderer._context.fillRect((drawLine.x - hlPaddingLeft), (drawLine.y + offset), (drawLine.w + hlPaddingRight + hlPaddingLeft), hlHeight);
+                    }
+                }
+                // Text shadow.
+                let prevShadowSettings = null;
+                if (textTextureRenderer._settings.shadow) {
+                    prevShadowSettings = [textTextureRenderer._context.shadowColor, textTextureRenderer._context.shadowOffsetX, textTextureRenderer._context.shadowOffsetY, textTextureRenderer._context.shadowBlur];
+                    textTextureRenderer._context.shadowColor = textTextureRenderer._settings.shadowColor;
+                    textTextureRenderer._context.shadowOffsetX = textTextureRenderer._settings.shadowOffsetX * precision;
+                    textTextureRenderer._context.shadowOffsetY = textTextureRenderer._settings.shadowOffsetY * precision;
+                    textTextureRenderer._context.shadowBlur = textTextureRenderer._settings.shadowBlur * precision;
+                }
+                textTextureRenderer._context.fillStyle = textTextureRenderer._settings.textColor;
+                for (let i = 0, n = drawLines.length; i < n; i++) {
+                    let drawLine = drawLines[i];
+                    textTextureRenderer._context.fillText(drawLine.text, drawLine.x, drawLine.y);
+                }
+
+                if (prevShadowSettings) {
+                    textTextureRenderer._context.shadowColor = prevShadowSettings[0];
+                    textTextureRenderer._context.shadowOffsetX = prevShadowSettings[1];
+                    textTextureRenderer._context.shadowOffsetY = prevShadowSettings[2];
+                    textTextureRenderer._context.shadowBlur = prevShadowSettings[3];
+                }
+
+                if (cutSx || cutSy) {
+                    textTextureRenderer._context.translate(cutSx, cutSy);
         }
-
-        highlightColor = "0x" + highlightColor.toString(16);
-        shadowColor = "0x" + shadowColor.toString(16);
-        let sparkText = sparkscene.create({ t: "text", text:textTextureRenderer._settings.text, pixelSize:fontSize, textColorHint:textColor,
-            highlight:highlight, highlightColor:highlightColor , highlightOffset:hlOffset , highlightPaddingLeft:hlPaddingLeft , highlightPaddingRight:hlPaddingRight, highlightHeight:hlHeight,
-            shadow: textTextureRenderer._settings.shadow, shadowColor:shadowColor , shadowOffsetX:shadowOffsetX, shadowOffsetY:shadowOffsetY , shadowBlur:shadowBlur});
-
-        return new Promise((resolve, reject) => {
-            sparkText.ready.then( function(obj) {
-                let renderInfo = {};
-                renderInfo.w = sparkText.w;
-                renderInfo.h = sparkText.h;
-                textTextureRenderer._canvas.width = sparkText.w;
-                textTextureRenderer._canvas.height = sparkText.h;
-                textTextureRenderer._canvas.internal = sparkText;
+                // Lightining drawing ends here
+                canvasInternal.ready.then(() => { // everything is drawn
+                    renderInfo.w = canvasInternal.w;
+                    renderInfo.h = canvasInternal.h;
+                    textTextureRenderer._canvas.width = canvasInternal.w;
+                    textTextureRenderer._canvas.height = canvasInternal.h;
+                    textTextureRenderer._canvas.internal = canvasInternal;
                 textTextureRenderer.renderInfo = renderInfo;
                 resolve();
+                });
             });
         });
+        return drawPromise;
+    }
+    getFontSetting(textTextureRenderer) {
+        let fontResource = textTextureRenderer._context.font;
+        let fontFace = textTextureRenderer._settings.fontFace;
+        let preloadedFonts = textTextureRenderer._stage.application._currentApp.fontFaces;
+        if (preloadedFonts.has(fontFace)) {
+            fontResource = preloadedFonts.get(fontFace);
+        }
+        return fontResource;
+    }
+    argb2rgba(val) {
+        let str = val.toString(16);
+        let swp = str.slice(2,8) + str[0] + str[1];
+        return parseInt(swp, 16);
+    }
+    rgba2argb(val) {
+        let str = val.toString(16);
+        let swp = str[6] + str[7] + str.slice(0,6);
+        return parseInt(swp, 16);
     }
 }
 
