@@ -206,8 +206,16 @@ export default class SparkPlatform {
             canvasInternal.ready.then( function(obj) { // waiting for the empty scene
                 canvasInternal.parent = sparkscene.root;
                 canvasInternal.pixelSize = textTextureRenderer._settings.fontSize*textTextureRenderer.getPrecision();
-                //textTextureRenderer._settings.offsetY === NaN ? null : textTextureRenderer._settings.offsetY;
-                // Lightining drawing begins here
+
+                // Original Lightining code (with small changes) begins here
+
+                // Changes to the original code are:
+                // Replaced:  `this.` => `textTextureRenderer.`
+                // Replaced `StageUtils.getRgbaString(color)` => `color`
+                // Added this line (which is completely optional and can be removed):
+                // canvasInternal.label = textTextureRenderer._settings.text.slice(0, 10) + '..';
+
+
                 let renderInfo = {};
         const precision = textTextureRenderer.getPrecision();
                 let paddingLeft = textTextureRenderer._settings.paddingLeft * precision;
@@ -223,8 +231,7 @@ export default class SparkPlatform {
                 const cutSy = textTextureRenderer._settings.cutSy * precision;
                 const cutEy = textTextureRenderer._settings.cutEy * precision;
 
-                /// DBG Spark.
-                canvasInternal.label = textTextureRenderer._settings.text.slice(0, 10) + '..';
+                canvasInternal.label = textTextureRenderer._settings.text.slice(0, 10) + '..'; // allows to distinguish different canvases by label, useful for debugging
                 // Set font properties.
                 textTextureRenderer.setFontProperties();
                 // Total width.
@@ -391,7 +398,7 @@ export default class SparkPlatform {
                 if (cutSx || cutSy) {
                     textTextureRenderer._context.translate(cutSx, cutSy);
         }
-                // Lightining drawing ends here
+                // Original Lightining code ends here
                 canvasInternal.ready.then(() => { // everything is drawn
                     renderInfo.w = canvasInternal.w;
                     renderInfo.h = canvasInternal.h;
@@ -413,16 +420,6 @@ export default class SparkPlatform {
             fontResource = preloadedFonts.get(fontFace);
         }
         return fontResource;
-    }
-    argb2rgba(val) {
-        let str = val.toString(16);
-        let swp = str.slice(2,8) + str[0] + str[1];
-        return parseInt(swp, 16);
-    }
-    rgba2argb(val) {
-        let str = val.toString(16);
-        let swp = str[6] + str[7] + str.slice(0,6);
-        return parseInt(swp, 16);
     }
 }
 
