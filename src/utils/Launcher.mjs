@@ -4,7 +4,7 @@ import http from 'http';
 import https from 'https';
 import fetch from 'node-fetch';
 import lng from "wpe-lightning";
-import SparkPlatform from "wpe-lightning-spark/src/platforms/spark/SparkPlatform.mjs";
+import SparkPlatform from "wpe-lightning-spark/src/platforms/spark/SparkPlatform";
 
 const _fs = fs;
 const _http = http;
@@ -57,6 +57,7 @@ export default class Launcher {
                         canvas2d: false,
                     },
                     debug: false,
+                    keys: {},
                 },
                 options));
 
@@ -80,6 +81,12 @@ export default class Launcher {
             app = null;
         });
 
-        return launchCallback(app);
+        const fontResources = appType.getFonts().map(
+            ({family, url, descriptors}) => sc.create({t: "fontResource", url}));
+
+        const preLoadFonts = Promise.all(
+            fontResources.map(fontResource => fontResource.ready));
+
+        return preLoadFonts.then(() => launchCallback(app));
     }
 }

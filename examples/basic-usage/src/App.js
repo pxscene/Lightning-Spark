@@ -1,6 +1,11 @@
 import lng from "wpe-lightning";
 
 export default class App extends lng.Application {
+
+    static getFonts() {
+        return [{family: 'RobotoRegular', url: 'http://localhost:8080/static/fonts/roboto-regular.ttf', descriptors: {}}];
+    }
+
     static _template() {
         return {
             x: 0, y: 0, w: 1920, h: 1080,
@@ -13,6 +18,7 @@ export default class App extends lng.Application {
                 x: 55, y: 65, w: 774, h: 40,
                 alpha: 0,
                 text: {
+                    fontFace: 'RobotoRegular',
                     text: 'Loading',
                     textColor: 0xFF000000,
                 },
@@ -21,6 +27,7 @@ export default class App extends lng.Application {
                 x: 55, y: 65, w: 774, h: 40,
                 alpha: 0,
                 text: {
+                    fontFace: 'RobotoRegular',
                     text: 'Hello World',
                     textColor: 0xFF000000,
                 },
