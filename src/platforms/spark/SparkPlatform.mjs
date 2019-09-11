@@ -3,7 +3,7 @@ import http from "http";
 import https from "https";
 
 export default class SparkPlatform {
-    
+
     init(stage) {
         this.stage = stage;
         this._looping = false;
@@ -76,7 +76,7 @@ export default class SparkPlatform {
         let boundW = w;
         let boundH = h;
         let data = "data:image/svg,"+'<svg viewBox="0 0 '+boundW+' '+boundH+'" xmlns="http://www.w3.org/2000/svg"><rect width="'+w+'" height="'+h+'" fill="'+fillColor+'" fill-opacity="'+opacity+'" rx="'+radius+'" stroke="'+strokeColor+'" stroke-width="'+strokeWidth+'"/></svg>';
-    
+
         let imageObj = sparkscene.create({ t: "image", flip:true, url:data});
         imageObj.ready.then( function(obj) {
             let canvas = {};
@@ -107,7 +107,7 @@ export default class SparkPlatform {
                     <rect x="0" y="0" width="'+boundW+'" height="'+boundH+'" fill="url(#rectGradient)"  rx="'+radius+'" stroke-width="'+margin+'" filter="url(#rectBlur)"/> \
                 </g> \
                 </svg>';
-    
+
         let imageObj = sparkscene.create({ t: "image", flip:true, url:data});
         imageObj.ready.then( function(obj) {
             let canvas = {};
@@ -163,7 +163,6 @@ export default class SparkPlatform {
         }
         options.premultiplyAlpha = false;
         options.flipBlueRed = false;
-
         return options;
     }
 
@@ -179,12 +178,12 @@ export default class SparkPlatform {
             this._sparkCanvas = null;
         }
         if (this._sparkCanvas === null) {
-            sparkCanvas = sparkscene.create({t: "textCanvas"});
-            sparkCanvas.label = Date.now().toString();
-            sparkCanvas.colorMode = "ARGB";
+            sparkCanvas = {};
+            sparkCanvas.internal = sparkscene.create({t: "textCanvas"});
+            sparkCanvas.internal.colorMode = "ARGB";
             this._sparkCanvas = sparkCanvas;
             this._sparkCanvas.getContext = function() {
-                return sparkCanvas; // We don't have contexts in Spark, so returning the canvas itself
+                return sparkCanvas.internal;
             }
         }
         return this._sparkCanvas;
@@ -199,25 +198,22 @@ export default class SparkPlatform {
         console.warn("No support for key handling");
     }
 
-    drawText(textTextureRenderer){
-        let canvasInternal = textTextureRenderer._canvas; // _canvas is a pxTextCanvas object crated in getDrawingCanvas()
-        let platform = this;
+    drawText(textTextureRenderer) {
+        let canvasInternal = textTextureRenderer._canvas.internal; // _canvas.internal is a pxTextCanvas object created in getDrawingCanvas()
         let drawPromise = new Promise((resolve, reject) => {
-            canvasInternal.ready.then( function(obj) { // waiting for the empty scene
+            canvasInternal.ready.then(function (obj) { // waiting for the empty scene
                 canvasInternal.parent = sparkscene.root;
-                canvasInternal.pixelSize = textTextureRenderer._settings.fontSize*textTextureRenderer.getPrecision();
+                canvasInternal.pixelSize = textTextureRenderer._settings.fontSize * textTextureRenderer.getPrecision();
 
                 // Original Lightining code (with small changes) begins here
-
                 // Changes to the original code are:
                 // Replaced:  `this.` => `textTextureRenderer.`
                 // Replaced `StageUtils.getRgbaString(color)` => `color`
+                // Replaced `this._canvas.width` = `canvasInternal.width` and `this._canvas.height` = `canvasInternal.height` after the line: // Add extra margin to prevent issue with clipped text when scaling.
                 // Added this line (which is completely optional and can be removed):
                 // canvasInternal.label = textTextureRenderer._settings.text.slice(0, 10) + '..';
-
-
                 let renderInfo = {};
-        const precision = textTextureRenderer.getPrecision();
+                const precision = textTextureRenderer.getPrecision();
                 let paddingLeft = textTextureRenderer._settings.paddingLeft * precision;
                 let paddingRight = textTextureRenderer._settings.paddingRight * precision;
                 const fontSize = textTextureRenderer._settings.fontSize * precision;
@@ -331,8 +327,8 @@ export default class SparkPlatform {
                     height = Math.min(height, cutEy - cutSy);
                 }
                 // Add extra margin to prevent issue with clipped text when scaling.
-                textTextureRenderer._canvas.width = Math.ceil(width + textTextureRenderer._stage.getOption('textRenderIssueMargin'));
-                textTextureRenderer._canvas.height = Math.ceil(height);
+                canvasInternal.width = Math.ceil(width + textTextureRenderer._stage.getOption('textRenderIssueMargin'));
+                canvasInternal.height = Math.ceil(height);
                 // Canvas context has been reset.
                 textTextureRenderer.setFontProperties();
                 if (fontSize >= 128) {
@@ -355,17 +351,17 @@ export default class SparkPlatform {
                         linePositionX += (innerWidth - lineWidths[i]);
                     } else if (textTextureRenderer._settings.textAlign === 'center') {
                         linePositionX += ((innerWidth - lineWidths[i]) / 2);
-        }
+                    }
                     linePositionX += paddingLeft;
                     drawLines.push({text: lines[i], x: linePositionX, y: linePositionY, w: lineWidths[i]});
                 }
                 // Highlight.
                 if (textTextureRenderer._settings.highlight) {
                     let color = textTextureRenderer._settings.highlightColor || 0x00000000;
-        let hlHeight = (textTextureRenderer._settings.highlightHeight * precision || fontSize * 1.5);
+                    let hlHeight = (textTextureRenderer._settings.highlightHeight * precision || fontSize * 1.5);
                     let offset = (textTextureRenderer._settings.highlightOffset !== null ? textTextureRenderer._settings.highlightOffset * precision : -0.5 * fontSize);
-        const hlPaddingLeft = (textTextureRenderer._settings.highlightPaddingLeft !== null ? textTextureRenderer._settings.highlightPaddingLeft * precision : paddingLeft);
-        const hlPaddingRight = (textTextureRenderer._settings.highlightPaddingRight !== null ? textTextureRenderer._settings.highlightPaddingRight * precision : paddingRight);
+                    const hlPaddingLeft = (textTextureRenderer._settings.highlightPaddingLeft !== null ? textTextureRenderer._settings.highlightPaddingLeft * precision : paddingLeft);
+                    const hlPaddingRight = (textTextureRenderer._settings.highlightPaddingRight !== null ? textTextureRenderer._settings.highlightPaddingRight * precision : paddingRight);
 
                     textTextureRenderer._context.fillStyle = color;
                     for (let i = 0; i < drawLines.length; i++) {
@@ -397,16 +393,15 @@ export default class SparkPlatform {
 
                 if (cutSx || cutSy) {
                     textTextureRenderer._context.translate(cutSx, cutSy);
-        }
+                }
                 // Original Lightining code ends here
                 canvasInternal.ready.then(() => { // everything is drawn
                     renderInfo.w = canvasInternal.w;
                     renderInfo.h = canvasInternal.h;
                     textTextureRenderer._canvas.width = canvasInternal.w;
                     textTextureRenderer._canvas.height = canvasInternal.h;
-                    textTextureRenderer._canvas.internal = canvasInternal;
-                textTextureRenderer.renderInfo = renderInfo;
-                resolve();
+                    textTextureRenderer.renderInfo = renderInfo;
+                    resolve();
                 });
             });
         });
