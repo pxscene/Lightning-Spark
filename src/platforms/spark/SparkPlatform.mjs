@@ -407,6 +407,18 @@ export default class SparkPlatform {
         });
         return drawPromise;
     }
+
+    loadFonts(fonts) {
+        let promises = [];
+        let fontResources = new Map();
+        for (let font of fonts) {
+            let fontResource = sparkscene.create({t: "fontResource", url: font.url});
+            promises.push(fontResource.ready);
+            fontResources.set(font.family, fontResource);
+        }
+        return {promises: promises, fontResources: fontResources}
+    }
+
     getFontSetting(textTextureRenderer) {
         let fontResource = textTextureRenderer._context.font;
         let fontFace = textTextureRenderer._settings.fontFace;
