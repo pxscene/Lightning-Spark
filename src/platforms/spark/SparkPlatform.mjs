@@ -422,9 +422,12 @@ export default class SparkPlatform {
     getFontSetting(textTextureRenderer) {
         let fontResource = textTextureRenderer._context.font;
         let fontFace = textTextureRenderer._settings.fontFace;
-        let preloadedFonts = textTextureRenderer._stage.application._currentApp.fontFaces;
-        if (preloadedFonts.has(fontFace)) {
-            fontResource = preloadedFonts.get(fontFace);
+        let application = textTextureRenderer._stage.application;
+        if (application !== undefined && application._currentApp !== undefined) {
+            let preloadedFonts = textTextureRenderer._stage.application._currentApp.fontFaces;
+            if (preloadedFonts.has(fontFace)) {
+                fontResource = preloadedFonts.get(fontFace);
+            }
         }
         return fontResource;
     }
