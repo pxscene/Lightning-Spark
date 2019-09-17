@@ -81,12 +81,12 @@ export default class Launcher {
             app = null;
         });
 
-        const fontResources = appType.getFonts().map(
-            ({family, url, descriptors}) => sc.create({t: "fontResource", url}));
+        // reach into the app and get its platform instance
+        // in order to load the fonts
+        const fonts =
+            app.stage.platform.loadFonts(appType.getFonts());
 
-        const preLoadFonts = Promise.all(
-            fontResources.map(fontResource => fontResource.ready));
-
-        return preLoadFonts.then(() => launchCallback(app));
+        return Promise.all(fonts.promises)
+            .then(() => launchCallback(app));
     }
 }
