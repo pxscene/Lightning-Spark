@@ -4962,6 +4962,8 @@ class ElementCore {
         if (changedDims) {
             // Recalc mount, scale position.
             this._recalcLocalTranslate();
+
+            this.element.onDimensionsChanged(this._w, this._h);
         }
     }
 
@@ -6379,7 +6381,7 @@ class TextTextureRenderer {
     };
 
     setFontProperties() {
-        this._context.font = this._getFontSetting();
+        this._context.font = Utils.isSpark ? this._stage.platform.getFontSetting(this) : this._getFontSetting();
         this._context.textBaseline = this._settings.textBaseline;
     };
 
@@ -8535,6 +8537,15 @@ class Element {
         this._updateDimensions();
     };
 
+    onDimensionsChanged(w, h) {
+        if (this.texture instanceof TextTexture) {
+            this.texture.w = w;
+            this.texture.h = h;
+            this.w = w;
+            this.h = h;
+        }
+    }
+
     _updateDimensions() {
         let w = this._getRenderWidth();
         let h = this._getRenderHeight();
@@ -10677,11 +10688,17 @@ class Component extends Element {
     }
 
     __onStateChange() {
-        this.application.updateFocusPath();
+        /* FIXME: Workaround for case, where application was shut but component still lives */
+        if (this.application) {
+            this.application.updateFocusPath();
+        }
     }
 
     _refocus() {
-        this.application.updateFocusPath();
+        /* FIXME: Workaround for case, where application was shut but component still lives */
+        if (this.application) {
+            this.application.updateFocusPath();
+        }
     }
 
     /**
@@ -20187,11 +20204,12 @@ if (Utils.isWeb) {
 }
 
 class SparkPlatform {
-    
+
     init(stage) {
         this.stage = stage;
         this._looping = false;
         this._awaitingLoop = false;
+        this._sparkCanvas = null;
     }
 
     destroy() {
@@ -20259,7 +20277,7 @@ class SparkPlatform {
         let boundW = w;
         let boundH = h;
         let data = "data:image/svg,"+'<svg viewBox="0 0 '+boundW+' '+boundH+'" xmlns="http://www.w3.org/2000/svg"><rect width="'+w+'" height="'+h+'" fill="'+fillColor+'" fill-opacity="'+opacity+'" rx="'+radius+'" stroke="'+strokeColor+'" stroke-width="'+strokeWidth+'"/></svg>';
-    
+
         let imageObj = sparkscene.create({ t: "image", flip:true, url:data});
         imageObj.ready.then( function(obj) {
             let canvas = {};
@@ -20290,7 +20308,7 @@ class SparkPlatform {
                     <rect x="0" y="0" width="'+boundW+'" height="'+boundH+'" fill="url(#rectGradient)"  rx="'+radius+'" stroke-width="'+margin+'" filter="url(#rectBlur)"/> \
                 </g> \
                 </svg>';
-    
+
         let imageObj = sparkscene.create({ t: "image", flip:true, url:data});
         imageObj.ready.then( function(obj) {
             let canvas = {};
@@ -20345,7 +20363,6 @@ class SparkPlatform {
         }
         options.premultiplyAlpha = false;
         options.flipBlueRed = false;
-
         return options;
     }
 
@@ -20355,9 +20372,20 @@ class SparkPlatform {
     }
 
     getDrawingCanvas() {
-        let canvas = {};
-        canvas.getContext = function() {};
-        return canvas;
+        let sparkCanvas;
+        {
+            this._sparkCanvas = null;
+        }
+        if (this._sparkCanvas === null) {
+            sparkCanvas = {};
+            sparkCanvas.internal = sparkscene.create({t: "textCanvas"});
+            sparkCanvas.internal.colorMode = "ARGB";
+            this._sparkCanvas = sparkCanvas;
+            this._sparkCanvas.getContext = function() {
+                return sparkCanvas.internal;
+            };
+        }
+        return this._sparkCanvas;
     }
 
     nextFrame(changes) {
@@ -20369,54 +20397,246 @@ class SparkPlatform {
         console.warn("No support for key handling");
     }
 
-    drawText(textTextureRenderer){
-        const precision = textTextureRenderer.getPrecision();
-        let highlight = textTextureRenderer._settings.highlight;
-        const fontSize = textTextureRenderer._settings.fontSize*textTextureRenderer.getPrecision();
-        let highlightColor = 0xFF000000;
-        if (highlight)
-        {
-            highlightColor = textTextureRenderer._settings.highlightColor || 0x00000000;
-        }
-        let hlHeight = (textTextureRenderer._settings.highlightHeight * precision || fontSize * 1.5);
-        let hlOffset = (textTextureRenderer._settings.highlightOffset !== null ? textTextureRenderer._settings.highlightOffset * precision : -0.5 * fontSize);
-        const hlPaddingLeft = (textTextureRenderer._settings.highlightPaddingLeft !== null ? textTextureRenderer._settings.highlightPaddingLeft * precision : paddingLeft);
-        const hlPaddingRight = (textTextureRenderer._settings.highlightPaddingRight !== null ? textTextureRenderer._settings.highlightPaddingRight * precision : paddingRight);
+    drawText(textTextureRenderer) {
+        let canvasInternal = textTextureRenderer._canvas.internal; // _canvas.internal is a pxTextCanvas object created in getDrawingCanvas()
+        let drawPromise = new Promise((resolve, reject) => {
+            canvasInternal.ready.then(function (obj) { // waiting for the empty scene
+                canvasInternal.parent = sparkscene.root;
+                canvasInternal.pixelSize = textTextureRenderer._settings.fontSize * textTextureRenderer.getPrecision();
 
-        let shadowColor = textTextureRenderer._settings.shadowColor;
-        let shadowOffsetX = textTextureRenderer._settings.shadowOffsetX * precision;
-        let shadowOffsetY = textTextureRenderer._settings.shadowOffsetY * precision;
-        let shadowBlur = textTextureRenderer._settings.shadowBlur * precision;
-        let textColor = textTextureRenderer._settings.textColor;
-        let textColorTemp = textColor.toString(16);
-        if (textColorTemp.length >= 8)
-        {
-            let alpha = textColorTemp.substring(0,2);
-            let red = textColorTemp.substring(2,4);
-            let green = textColorTemp.substring(4,6);
-            let blue = textColorTemp.substring(6);
-            textColorTemp = "0x" + red + green + blue + alpha;
-            textColor = parseInt(textColorTemp,16);
-        }
-
-        highlightColor = "0x" + highlightColor.toString(16);
-        shadowColor = "0x" + shadowColor.toString(16);
-        let sparkText = sparkscene.create({ t: "text", text:textTextureRenderer._settings.text, pixelSize:fontSize, textColorHint:textColor,
-            highlight:highlight, highlightColor:highlightColor , highlightOffset:hlOffset , highlightPaddingLeft:hlPaddingLeft , highlightPaddingRight:hlPaddingRight, highlightHeight:hlHeight,
-            shadow: textTextureRenderer._settings.shadow, shadowColor:shadowColor , shadowOffsetX:shadowOffsetX, shadowOffsetY:shadowOffsetY , shadowBlur:shadowBlur});
-
-        return new Promise((resolve, reject) => {
-            sparkText.ready.then( function(obj) {
+                // Original Lightining code (with small changes) begins here
+                // Changes to the original code are:
+                // Replaced:  `this.` => `textTextureRenderer.`
+                // Replaced `StageUtils.getRgbaString(color)` => `color`
+                // Replaced `this._canvas.width` = `canvasInternal.width` and `this._canvas.height` = `canvasInternal.height` after the line: // Add extra margin to prevent issue with clipped text when scaling.
+                // Added this line (which is completely optional and can be removed):
+                // canvasInternal.label = textTextureRenderer._settings.text.slice(0, 10) + '..';
                 let renderInfo = {};
-                renderInfo.w = sparkText.w;
-                renderInfo.h = sparkText.h;
-                textTextureRenderer._canvas.width = sparkText.w;
-                textTextureRenderer._canvas.height = sparkText.h;
-                textTextureRenderer._canvas.internal = sparkText;
-                textTextureRenderer.renderInfo = renderInfo;
-                resolve();
+                const precision = textTextureRenderer.getPrecision();
+                let paddingLeft = textTextureRenderer._settings.paddingLeft * precision;
+                let paddingRight = textTextureRenderer._settings.paddingRight * precision;
+                const fontSize = textTextureRenderer._settings.fontSize * precision;
+                let offsetY = textTextureRenderer._settings.offsetY === null ? null : (textTextureRenderer._settings.offsetY * precision);
+                let lineHeight = textTextureRenderer._settings.lineHeight * precision;
+                const w = textTextureRenderer._settings.w * precision;
+                const h = textTextureRenderer._settings.h * precision;
+                let wordWrapWidth = textTextureRenderer._settings.wordWrapWidth * precision;
+                const cutSx = textTextureRenderer._settings.cutSx * precision;
+                const cutEx = textTextureRenderer._settings.cutEx * precision;
+                const cutSy = textTextureRenderer._settings.cutSy * precision;
+                const cutEy = textTextureRenderer._settings.cutEy * precision;
+
+                canvasInternal.label = textTextureRenderer._settings.text.slice(0, 10) + '..'; // allows to distinguish different canvases by label, useful for debugging
+                // Set font properties.
+                textTextureRenderer.setFontProperties();
+                // Total width.
+                let width = w || (2048 / textTextureRenderer.getPrecision());
+                // Inner width.
+                let innerWidth = width - (paddingLeft);
+                if (innerWidth < 10) {
+                    width += (10 - innerWidth);
+                    innerWidth += (10 - innerWidth);
+                }
+                if (!wordWrapWidth) {
+                    wordWrapWidth = innerWidth;
+                }
+                // word wrap
+                // preserve original text
+                let linesInfo;
+                if (textTextureRenderer._settings.wordWrap) {
+                    linesInfo = textTextureRenderer.wrapText(textTextureRenderer._settings.text, wordWrapWidth);
+                } else {
+                    linesInfo = {l: textTextureRenderer._settings.text.split(/(?:\r\n|\r|\n)/), n: []};
+                    let n = linesInfo.l.length;
+                    for (let i = 0; i < n - 1; i++) {
+                        linesInfo.n.push(i);
+                    }
+                }
+                let lines = linesInfo.l;
+                if (textTextureRenderer._settings.maxLines && lines.length > textTextureRenderer._settings.maxLines) {
+                    let usedLines = lines.slice(0, textTextureRenderer._settings.maxLines);
+                    let otherLines = null;
+                    if (textTextureRenderer._settings.maxLinesSuffix) {
+                        // Wrap again with max lines suffix enabled.
+                        let w = textTextureRenderer._settings.maxLinesSuffix ? textTextureRenderer._context.measureText(textTextureRenderer._settings.maxLinesSuffix).width : 0;
+                        let al = textTextureRenderer.wrapText(usedLines[usedLines.length - 1], wordWrapWidth - w);
+                        usedLines[usedLines.length - 1] = al.l[0] + textTextureRenderer._settings.maxLinesSuffix;
+                        otherLines = [al.l.length > 1 ? al.l[1] : ''];
+                    } else {
+                        otherLines = [''];
+                    }
+                    // Re-assemble the remaining text.
+                    let i, n = lines.length;
+                    let j = 0;
+                    let m = linesInfo.n.length;
+                    for (i = textTextureRenderer._settings.maxLines; i < n; i++) {
+                        otherLines[j] += (otherLines[j] ? " " : "") + lines[i];
+                        if (i + 1 < m && linesInfo.n[i + 1]) {
+                            j++;
+                        }
+                    }
+                    renderInfo.remainingText = otherLines.join("\n");
+                    renderInfo.moreTextLines = true;
+                    lines = usedLines;
+                } else {
+                    renderInfo.moreTextLines = false;
+                    renderInfo.remainingText = "";
+                }
+                // calculate text width
+                let maxLineWidth = 0;
+                let lineWidths = [];
+                for (let i = 0; i < lines.length; i++) {
+                    let lineWidth = textTextureRenderer._context.measureText(lines[i]).width;
+                    lineWidths.push(lineWidth);
+                    maxLineWidth = Math.max(maxLineWidth, lineWidth);
+                }
+                renderInfo.lineWidths = lineWidths;
+                if (!w) {
+                    // Auto-set width to max text length.
+                    width = maxLineWidth + paddingLeft + paddingRight;
+                    innerWidth = maxLineWidth;
+                }
+                // calculate text height
+                lineHeight = lineHeight || fontSize;
+                let height;
+                if (h) {
+                    height = h;
+                } else {
+                    height = lineHeight * (lines.length - 1) + 0.5 * fontSize + Math.max(lineHeight, fontSize) + offsetY;
+                }
+                if (offsetY === null) {
+                    offsetY = fontSize;
+                }
+                renderInfo.w = width;
+                renderInfo.h = height;
+                renderInfo.lines = lines;
+                renderInfo.precision = precision;
+                if (!width) {
+                    // To prevent canvas errors.
+                    width = 1;
+                }
+                if (!height) {
+                    // To prevent canvas errors.
+                    height = 1;
+                }
+                if (cutSx || cutEx) {
+                    width = Math.min(width, cutEx - cutSx);
+                }
+                if (cutSy || cutEy) {
+                    height = Math.min(height, cutEy - cutSy);
+                }
+                // Add extra margin to prevent issue with clipped text when scaling.
+                canvasInternal.width = Math.ceil(width + textTextureRenderer._stage.getOption('textRenderIssueMargin'));
+                canvasInternal.height = Math.ceil(height);
+                // Canvas context has been reset.
+                textTextureRenderer.setFontProperties();
+                if (fontSize >= 128) {
+                    // WpeWebKit bug: must force compositing because cairo-traps-compositor will not work with text first.
+                    textTextureRenderer._context.globalAlpha = 0.01;
+                    textTextureRenderer._context.fillRect(0, 0, 0.01, 0.01);
+                    textTextureRenderer._context.globalAlpha = 1.0;
+                }
+                if (cutSx || cutSy) {
+                    textTextureRenderer._context.translate(-cutSx, -cutSy);
+                }
+                let linePositionX;
+                let linePositionY;
+                let drawLines = [];
+                // Draw lines line by line.
+                for (let i = 0, n = lines.length; i < n; i++) {
+                    linePositionX = 0;
+                    linePositionY = (i * lineHeight) + offsetY;
+                    if (textTextureRenderer._settings.textAlign === 'right') {
+                        linePositionX += (innerWidth - lineWidths[i]);
+                    } else if (textTextureRenderer._settings.textAlign === 'center') {
+                        linePositionX += ((innerWidth - lineWidths[i]) / 2);
+                    }
+                    linePositionX += paddingLeft;
+                    drawLines.push({text: lines[i], x: linePositionX, y: linePositionY, w: lineWidths[i]});
+                }
+                // Highlight.
+                if (textTextureRenderer._settings.highlight) {
+                    let color = textTextureRenderer._settings.highlightColor || 0x00000000;
+                    let hlHeight = (textTextureRenderer._settings.highlightHeight * precision || fontSize * 1.5);
+                    let offset = (textTextureRenderer._settings.highlightOffset !== null ? textTextureRenderer._settings.highlightOffset * precision : -0.5 * fontSize);
+                    const hlPaddingLeft = (textTextureRenderer._settings.highlightPaddingLeft !== null ? textTextureRenderer._settings.highlightPaddingLeft * precision : paddingLeft);
+                    const hlPaddingRight = (textTextureRenderer._settings.highlightPaddingRight !== null ? textTextureRenderer._settings.highlightPaddingRight * precision : paddingRight);
+
+                    textTextureRenderer._context.fillStyle = color;
+                    for (let i = 0; i < drawLines.length; i++) {
+                        let drawLine = drawLines[i];
+                        textTextureRenderer._context.fillRect((drawLine.x - hlPaddingLeft), (drawLine.y + offset), (drawLine.w + hlPaddingRight + hlPaddingLeft), hlHeight);
+                    }
+                }
+                // Text shadow.
+                let prevShadowSettings = null;
+                if (textTextureRenderer._settings.shadow) {
+                    prevShadowSettings = [textTextureRenderer._context.shadowColor, textTextureRenderer._context.shadowOffsetX, textTextureRenderer._context.shadowOffsetY, textTextureRenderer._context.shadowBlur];
+                    textTextureRenderer._context.shadowColor = textTextureRenderer._settings.shadowColor;
+                    textTextureRenderer._context.shadowOffsetX = textTextureRenderer._settings.shadowOffsetX * precision;
+                    textTextureRenderer._context.shadowOffsetY = textTextureRenderer._settings.shadowOffsetY * precision;
+                    textTextureRenderer._context.shadowBlur = textTextureRenderer._settings.shadowBlur * precision;
+                }
+                textTextureRenderer._context.fillStyle = textTextureRenderer._settings.textColor;
+                for (let i = 0, n = drawLines.length; i < n; i++) {
+                    let drawLine = drawLines[i];
+                    textTextureRenderer._context.fillText(drawLine.text, drawLine.x, drawLine.y);
+                }
+
+                if (prevShadowSettings) {
+                    textTextureRenderer._context.shadowColor = prevShadowSettings[0];
+                    textTextureRenderer._context.shadowOffsetX = prevShadowSettings[1];
+                    textTextureRenderer._context.shadowOffsetY = prevShadowSettings[2];
+                    textTextureRenderer._context.shadowBlur = prevShadowSettings[3];
+                }
+
+                if (cutSx || cutSy) {
+                    textTextureRenderer._context.translate(cutSx, cutSy);
+                }
+                // Original Lightining code ends here
+                canvasInternal.ready.then(() => { // everything is drawn
+                    renderInfo.w = canvasInternal.w;
+                    renderInfo.h = canvasInternal.h;
+                    textTextureRenderer._canvas.width = canvasInternal.w;
+                    textTextureRenderer._canvas.height = canvasInternal.h;
+                    textTextureRenderer.renderInfo = renderInfo;
+                    resolve();
+                });
             });
         });
+        return drawPromise;
+    }
+
+    loadFonts(fonts) {
+        let promises = [];
+        let fontResources = new Map();
+        for (let font of fonts) {
+            let fontResource = sparkscene.create({t: "fontResource", url: font.url});
+            promises.push(fontResource.ready);
+            fontResources.set(font.family, fontResource);
+        }
+
+        // load all the fonts now so can keep
+        // reference to the font resources created
+        // and use them in getFontSetting
+        return Promise.all(promises)
+            .then(() => {
+                this._fontResources = fontResources;
+                return {
+                    promises: promises,
+                    fontResources: fontResources
+                };
+            });
+    }
+
+    getFontSetting(textTextureRenderer) {
+        let fontResource = textTextureRenderer._context.font;
+        let fontFace = textTextureRenderer._settings.fontFace;
+
+        if (this._fontResources.has(fontFace)) {
+            fontResource = this._fontResources.get(fontFace);
+        }
+        return fontResource;
     }
 }
 
