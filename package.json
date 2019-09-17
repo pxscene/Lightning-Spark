@@ -5,11 +5,12 @@
   "license": "apache",
   "dependencies": {
     "rollup": "^1.10.0",
-    "wpe-lightning": "https://github.com/pxscene/Lightning.git#spark"
+    "wpe-lightning": "git+https://github.com/pxscene/Lightning.git#spark"
   },
   "main": "src/lightning.mjs",
   "scripts": {
-    "postinstall": "rollup -c"
+    "postinstall": "rollup -c",
+    "build": "rollup -c"
   },
   "repository": {
     "type": "git",
