@@ -59,3 +59,12 @@ typings/
 
 # next.js build output
 .next
+
+# intellij setting
+.idea/
+
+# project does not lock its dependencies
+package-lock.json
+
+# examples dist dir
+examples/basic-usage/dist/
