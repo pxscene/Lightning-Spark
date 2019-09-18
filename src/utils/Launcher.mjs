@@ -83,10 +83,9 @@ export default class Launcher {
 
         // reach into the app and get its platform instance
         // in order to load the fonts
-        const fonts =
-            app.stage.platform.loadFonts(appType.getFonts());
+        const preLoadFonts = Promise.all(
+            app.stage.platform.loadFonts(appType.getFonts()).promises);
 
-        return Promise.all(fonts.promises)
-            .then(() => launchCallback(app));
+        return preLoadFonts.then(() => launchCallback(app));
     }
 }
