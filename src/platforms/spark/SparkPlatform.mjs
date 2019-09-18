@@ -417,17 +417,18 @@ export default class SparkPlatform {
             fontResources.set(font.family, fontResource);
         }
 
-        // load all the fonts now so can keep
-        // reference to the font resources created
-        // and use them in getFontSetting
-        return Promise.all(promises)
-            .then(() => {
-                this._fontResources = fontResources;
-                return {
-                    promises: promises,
-                    fontResources: fontResources
-                };
-            });
+        // load fonts and then store a
+        // reference to them so they can be used
+        // in getFontSetting calls
+        Promise.all(promises)
+            .then(() => this._fontResources = fontResources);
+
+        // continue to return promise/font object
+        // to maintain compatibility with SDK client
+        return {
+            promises: promises,
+            fontResources: fontResources
+        };
     }
 
     getFontSetting(textTextureRenderer) {

@@ -15,21 +15,23 @@ export default class App extends lng.Application {
                 color: 0xFF191919,
             },
             Loader: {
-                x: 55, y: 65, w: 774, h: 40,
+                x: 55, y: 75, w: 774, h: 40,
                 alpha: 0,
                 text: {
                     fontFace: 'RobotoRegular',
+                    fontSize: 24,
                     text: 'Loading',
-                    textColor: 0xFF000000,
+                    textColor: 0xFFAAAAAA,
                 },
             },
             LandingPage: {
-                x: 55, y: 65, w: 774, h: 40,
+                x: 55, y: 75, w: 774, h: 40,
                 alpha: 0,
                 text: {
                     fontFace: 'RobotoRegular',
+                    fontSize: 24,
                     text: 'Hello World',
-                    textColor: 0xFF000000,
+                    textColor: 0xFFAAAAAA,
                 },
             },
         }
