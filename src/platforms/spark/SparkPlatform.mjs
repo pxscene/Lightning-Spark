@@ -206,8 +206,6 @@ export default class SparkPlatform {
                 textTextureRenderer.setFontProperties();
                 canvasInternal.font.ready.then(() => { // the font might have been coerced
                     canvasInternal.pixelSize = textTextureRenderer._settings.fontSize * textTextureRenderer.getPrecision();
-                    console.log("Settings fontStyle: ", textTextureRenderer._settings.fontStyle);
-                    console.log("Actual fontStyle: ", canvasInternal.font.fontStyle);
                     // Original Lightining code with some changes begins here
                     // Changes to the original code are:
                     // Replaced:  `this.` => `textTextureRenderer.`
