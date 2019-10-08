@@ -439,7 +439,7 @@ export default class SparkPlatform {
         let fontFace = textTextureRenderer._settings.fontFace;
         let fontStyle = textTextureRenderer._settings.fontStyle.toLowerCase();
 
-        if (this._fontResources.has(fontFace)) {
+        if (this._fontResources !== undefined && this._fontResources.has(fontFace)) {
             fontResource = this._fontResources.get(fontFace);
             if (fontResource.needsStyleCoercion(fontStyle)) {
                 let url = fontResource.url;
