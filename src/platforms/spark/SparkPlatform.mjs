@@ -374,7 +374,12 @@ export default class SparkPlatform {
                     // Text shadow.
                     let prevShadowSettings = null;
                     if (textTextureRenderer._settings.shadow) {
-                        prevShadowSettings = [textTextureRenderer._context.shadowColor, textTextureRenderer._context.shadowOffsetX, textTextureRenderer._context.shadowOffsetY, textTextureRenderer._context.shadowBlur];
+                    if(textTextureRenderer._context.shadow)
+                    {
+                        prevShadowSettings = [textTextureRenderer._context.shadow, textTextureRenderer._context.shadowColor, textTextureRenderer._context.shadowOffsetX, textTextureRenderer._context.shadowOffsetY, textTextureRenderer._context.shadowBlur];
+                    }
+                    textTextureRenderer._context.shadow        = textTextureRenderer._settings.shadow;
+
                         textTextureRenderer._context.shadowColor = textTextureRenderer._settings.shadowColor;
                         textTextureRenderer._context.shadowOffsetX = textTextureRenderer._settings.shadowOffsetX * precision;
                         textTextureRenderer._context.shadowOffsetY = textTextureRenderer._settings.shadowOffsetY * precision;
@@ -387,10 +392,12 @@ export default class SparkPlatform {
                     }
 
                     if (prevShadowSettings) {
-                        textTextureRenderer._context.shadowColor = prevShadowSettings[0];
-                        textTextureRenderer._context.shadowOffsetX = prevShadowSettings[1];
-                        textTextureRenderer._context.shadowOffsetY = prevShadowSettings[2];
-                        textTextureRenderer._context.shadowBlur = prevShadowSettings[3];
+
+                        textTextureRenderer._context.shadow        = prevShadowSettings[0];
+                        textTextureRenderer._context.shadowColor   = prevShadowSettings[1];
+                        textTextureRenderer._context.shadowOffsetX = prevShadowSettings[2];
+                        textTextureRenderer._context.shadowOffsetY = prevShadowSettings[3];
+                        textTextureRenderer._context.shadowBlur    = prevShadowSettings[4];
                     }
 
                     if (cutSx || cutSy) {
