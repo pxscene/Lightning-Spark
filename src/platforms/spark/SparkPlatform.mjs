@@ -358,46 +358,69 @@ export default class SparkPlatform {
                         drawLines.push({text: lines[i], x: linePositionX, y: linePositionY, w: lineWidths[i]});
                     }
                     // Highlight.
-                    if (textTextureRenderer._settings.highlight) {
-                        let color = textTextureRenderer._settings.highlightColor || 0x00000000;
-                        let hlHeight = (textTextureRenderer._settings.highlightHeight * precision || fontSize * 1.5);
-                        let offset = (textTextureRenderer._settings.highlightOffset !== null ? textTextureRenderer._settings.highlightOffset * precision : -0.5 * fontSize);
-                        const hlPaddingLeft = (textTextureRenderer._settings.highlightPaddingLeft !== null ? textTextureRenderer._settings.highlightPaddingLeft * precision : paddingLeft);
+                    let prevHighlightSettings = null;
+                    if (textTextureRenderer._settings.highlight)
+                    {
+                        if(textTextureRenderer._context.highlight)
+                        {
+                          prevHighlightSettings = [textTextureRenderer._context.highlight, textTextureRenderer._context.highlightColor, textTextureRenderer._context.highlightOffset, textTextureRenderer._context.highlightPaddingLeft, textTextureRenderer._context.highlightPaddingRight];
+                        }
+
+                        let color    = textTextureRenderer._settings.highlightColor || 0x00000000;
+                        //let hlHeight = (textTextureRenderer._settings.highlightHeight * precision || fontSize * 1.5);
+                        let offset   = (textTextureRenderer._settings.highlightOffset !== null ? textTextureRenderer._settings.highlightOffset * precision : -0.5 * fontSize);
+
+                        const hlPaddingLeft  = (textTextureRenderer._settings.highlightPaddingLeft  !== null ? textTextureRenderer._settings.highlightPaddingLeft  * precision : paddingLeft);
                         const hlPaddingRight = (textTextureRenderer._settings.highlightPaddingRight !== null ? textTextureRenderer._settings.highlightPaddingRight * precision : paddingRight);
 
-                        textTextureRenderer._context.fillStyle = color;
-                        for (let i = 0; i < drawLines.length; i++) {
-                            let drawLine = drawLines[i];
-                            textTextureRenderer._context.fillRect((drawLine.x - hlPaddingLeft), (drawLine.y + offset), (drawLine.w + hlPaddingRight + hlPaddingLeft), hlHeight);
-                        }
+                        textTextureRenderer._context.highlight             = textTextureRenderer._settings.highlight;
+                        textTextureRenderer._context.highlightColor        = color;
+                        textTextureRenderer._context.highlightOffset       = offset;
+                        textTextureRenderer._context.highlightPaddingLeft  = hlPaddingLeft;
+                        textTextureRenderer._context.highlightPaddingRight = hlPaddingRight;
                     }
                     // Text shadow.
                     let prevShadowSettings = null;
-                    if (textTextureRenderer._settings.shadow) {
-                    if(textTextureRenderer._context.shadow)
+                    if (textTextureRenderer._settings.shadow)
                     {
-                        prevShadowSettings = [textTextureRenderer._context.shadow, textTextureRenderer._context.shadowColor, textTextureRenderer._context.shadowOffsetX, textTextureRenderer._context.shadowOffsetY, textTextureRenderer._context.shadowBlur];
-                    }
-                    textTextureRenderer._context.shadow        = textTextureRenderer._settings.shadow;
+                        if(textTextureRenderer._context.shadow)
+                        {
+                            prevShadowSettings = [textTextureRenderer._context.shadow, textTextureRenderer._context.shadowColor, textTextureRenderer._context.shadowOffsetX, textTextureRenderer._context.shadowOffsetY, textTextureRenderer._context.shadowBlur];
+                        }
 
-                        textTextureRenderer._context.shadowColor = textTextureRenderer._settings.shadowColor;
+                        textTextureRenderer._context.shadow        = textTextureRenderer._settings.shadow;
+
+                        textTextureRenderer._context.shadowColor   = textTextureRenderer._settings.shadowColor;
                         textTextureRenderer._context.shadowOffsetX = textTextureRenderer._settings.shadowOffsetX * precision;
                         textTextureRenderer._context.shadowOffsetY = textTextureRenderer._settings.shadowOffsetY * precision;
-                        textTextureRenderer._context.shadowBlur = textTextureRenderer._settings.shadowBlur * precision;
+                        textTextureRenderer._context.shadowBlur    = textTextureRenderer._settings.shadowBlur * precision;
                     }
                     textTextureRenderer._context.fillStyle = textTextureRenderer._settings.textColor;
-                    for (let i = 0, n = drawLines.length; i < n; i++) {
+
+                    for (let i = 0, n = drawLines.length; i < n; i++)
+                    {
                         let drawLine = drawLines[i];
                         textTextureRenderer._context.fillText(drawLine.text, drawLine.x, drawLine.y);
                     }
 
-                    if (prevShadowSettings) {
-
+                    // Restore previous Shadow
+                    if (prevShadowSettings)
+                    {
                         textTextureRenderer._context.shadow        = prevShadowSettings[0];
                         textTextureRenderer._context.shadowColor   = prevShadowSettings[1];
                         textTextureRenderer._context.shadowOffsetX = prevShadowSettings[2];
                         textTextureRenderer._context.shadowOffsetY = prevShadowSettings[3];
                         textTextureRenderer._context.shadowBlur    = prevShadowSettings[4];
+                    }
+
+                    // Restore previous Highlight
+                    if (prevHighlightSettings)
+                    {
+                        textTextureRenderer._context.highlight             = prevHighlightSettings[0];
+                        textTextureRenderer._context.highlightColor        = prevHighlightSettings[1];
+                        textTextureRenderer._context.highlightOffset       = prevHighlightSettings[2];
+                        textTextureRenderer._context.highlightPaddingLeft  = prevHighlightSettings[3];
+                        textTextureRenderer._context.highlightPaddingRight = prevHighlightSettings[4];
                     }
 
                     if (cutSx || cutSy) {
