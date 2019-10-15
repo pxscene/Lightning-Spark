@@ -75,7 +75,10 @@ export default class SparkPlatform {
         }
         let boundW = w;
         let boundH = h;
-        let data = "data:image/svg,"+'<svg viewBox="0 0 '+boundW+' '+boundH+'" xmlns="http://www.w3.org/2000/svg"><rect width="'+w+'" height="'+h+'" fill="'+fillColor+'" fill-opacity="'+opacity+'" rx="'+radius+'" stroke="'+strokeColor+'" stroke-width="'+strokeWidth+'"/></svg>';
+        let data = "data:image/svg,"+
+          `<svg viewBox="-${strokeWidth/2} -${strokeWidth/2} ${boundW+strokeWidth} ${boundH+strokeWidth}" xmlns="http://www.w3.org/2000/svg">` +
+          `<rect width="${w}" height="${h}" fill="${fillColor}" fill-opacity="${opacity}" rx="${radius}" stroke="${strokeColor}" stroke-width="${strokeWidth}"/>` +
+          '</svg>';
 
         let imageObj = sparkscene.create({ t: "image", flip:true, url:data});
         imageObj.ready.then( function(obj) {
