@@ -73,11 +73,11 @@ export default class SparkPlatform {
             opacity = "0x"+alpha;
             opacity = parseInt(opacity, 16) / 255;
         }
-        let boundW = w;
-        let boundH = h;
+        let boundW = w+strokeWidth;
+        let boundH = h+strokeWidth;
         let data = "data:image/svg,"+
-          `<svg viewBox="-${strokeWidth/2} -${strokeWidth/2} ${boundW+strokeWidth} ${boundH+strokeWidth}" xmlns="http://www.w3.org/2000/svg">` +
-          `<rect width="${w}" height="${h}" fill="${fillColor}" fill-opacity="${opacity}" rx="${radius}" stroke="${strokeColor}" stroke-width="${strokeWidth}"/>` +
+          `<svg viewBox="0 0 ${boundW} ${boundH}" xmlns="http://www.w3.org/2000/svg">` +
+          `<rect x="${strokeWidth/2}" y="${strokeWidth/2}" width="${w}" height="${h}" fill="${fillColor}" fill-opacity="${opacity}" rx="${radius}" stroke="${strokeColor}" stroke-width="${strokeWidth}"/>` +
           '</svg>';
 
         let imageObj = sparkscene.create({ t: "image", flip:true, url:data});
