@@ -194,6 +194,9 @@ export default class SparkPlatform {
 
     nextFrame(changes) {
         this.changes = changes;
+        if (this.stage && this.stage.gl) {
+            this.stage.gl.scissor(0,0,0,0);
+        }
         //gles2.nextFrame(changes);
     }
 
