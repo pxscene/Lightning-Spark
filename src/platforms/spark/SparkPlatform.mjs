@@ -48,11 +48,11 @@ export default class SparkPlatform {
     }
 
     loadSrcTexture({src}, cb) {
-        let sparkImage = sparkscene.create({t:"image", flip:true, url:src});
+        let sparkImage = sparkscene.create({t:"image", url:src});
         const sparkGl = this.stage.gl;
         sparkImage.ready.then( function(obj) {
             let texture = sparkImage.texture();
-            cb(null, {source: sparkGl.createWebGLTexture(texture), w: sparkImage.resource.w, h: sparkImage.resource.h, premultiplyAlpha: false, flipBlueRed: false, imageRef: sparkImage});
+            cb(null, {source: sparkGl.createWebGLTexture(texture), w: sparkImage.resource.w, h: sparkImage.resource.h, premultiplyAlpha: false, flipBlueRed: false, imageRef: sparkImage, flipTextureY:true});
         });
     }
 
@@ -80,9 +80,10 @@ export default class SparkPlatform {
           `<rect x="${strokeWidth/2}" y="${strokeWidth/2}" width="${w}" height="${h}" fill="${fillColor}" fill-opacity="${opacity}" rx="${radius}" stroke="${strokeColor}" stroke-width="${strokeWidth}"/>` +
           '</svg>';
 
-        let imageObj = sparkscene.create({ t: "image", flip:true, url:data});
+        let imageObj = sparkscene.create({ t: "image", url:data});
         imageObj.ready.then( function(obj) {
             let canvas = {};
+            canvas.flipTextureY = true;
             canvas.internal = imageObj;
             canvas.width = w;
             canvas.height = h;
@@ -111,9 +112,10 @@ export default class SparkPlatform {
                 </g> \
                 </svg>';
 
-        let imageObj = sparkscene.create({ t: "image", flip:true, url:data});
+        let imageObj = sparkscene.create({ t: "image", url:data});
         imageObj.ready.then( function(obj) {
             let canvas = {};
+            canvas.flipTextureY = true;
             canvas.internal = imageObj;
             canvas.width = w;
             canvas.height = h;
@@ -124,9 +126,10 @@ export default class SparkPlatform {
     }
 
     createSvg(cb, stage, url, w, h) {
-        let imageObj = sparkscene.create({ t: "image", flip:true, url:url});
+        let imageObj = sparkscene.create({ t: "image", url:url});
         imageObj.ready.then( function(obj) {
             let canvas = {};
+            canvas.flipTextureY = true;
             canvas.internal = imageObj;
             canvas.width = w;
             canvas.height = h;
@@ -163,6 +166,9 @@ export default class SparkPlatform {
             options.w = canvas.width;
             options.h = canvas.height;
             options.imageRef = canvas.internal;
+            if (canvas.flipTextureY) {
+                options.flipTextureY = true;
+            }
         }
         options.premultiplyAlpha = false;
         options.flipBlueRed = false;
