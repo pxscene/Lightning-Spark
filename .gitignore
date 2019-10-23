@@ -68,3 +68,6 @@ package-lock.json
 
 # examples dist dir
 examples/basic-usage/dist/
+
+# generated files
+/dist/lightning-spark.mjs
