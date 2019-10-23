@@ -1,23 +1,20 @@
 const resolve = require('rollup-plugin-node-resolve');
 
-export default [{
+export default {
     input: './src/lightning.mjs',
     plugins: [resolve({
         only: [ 'wpe-lightning' ]
     })],
-    output: {
-        file: './dist/lightning-spark.js',
-        format: 'cjs',
-        name: 'lng'
-    }
-}, {
-    input: './src/lightning.mjs',
-    plugins: [resolve({
-        only: [ 'wpe-lightning' ]
-    })],
-    output: {
-        file: './dist/lightning-spark.mjs',
-        format: 'esm',
-        name: 'lng'
-    }
-}];
+    output: [
+        {
+            file: './dist/lightning-spark.js',
+            format: 'cjs',
+            name: 'lng'
+        },
+        {
+            file: './dist/lightning-spark.mjs',
+            format: 'esm',
+            name: 'lng'
+        }
+    ]
+};
