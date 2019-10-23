@@ -5,6 +5,7 @@
   "license": "apache",
   "dependencies": {
     "rollup": "^1.10.0",
+    "rollup-plugin-node-resolve": "^5.0.0",
     "wpe-lightning": "git+https://github.com/pxscene/Lightning.git#spark"
   },
   "main": "src/lightning.mjs",
@@ -18,8 +19,5 @@
   },
   "bugs": {
     "url": "https://github.com/WebPlatformForEmbedded/Lightning/issues"
-  },
-  "devDependencies": {
-    "rollup-plugin-node-resolve": "^5.0.0"
   }
 }
