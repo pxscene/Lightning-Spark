@@ -162,7 +162,10 @@ export default class SparkPlatform {
 
         if (canvas && canvas.internal)
         {
+            if (!canvas.internal.label)
             options.source = this.stage.gl.createWebGLTexture(canvas.internal.texture());
+        else
+            options.source = -1;
             options.w = canvas.width;
             options.h = canvas.height;
             options.imageRef = canvas.internal;
