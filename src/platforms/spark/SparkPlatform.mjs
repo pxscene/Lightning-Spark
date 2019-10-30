@@ -35,12 +35,12 @@ export default class SparkPlatform {
                     // We depend on blit to limit to 60fps.
                     setImmediate(lp);
                 } else {
-                    setTimeout(lp, 16);
+                    setTimeout(lp, 32);
                 }
                 self._awaitingLoop = true;
             }
         }
-        setTimeout(lp, 16);
+        setTimeout(lp, 32);
     }
 
     uploadGlTexture(gl, textureSource, source, options) {
