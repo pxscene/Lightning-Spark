@@ -5,7 +5,7 @@
   "license": "apache",
   "dependencies": {
     "rollup": "^1.10.0",
-    "wpe-lightning": "https://github.com/ashwinikalokhe/Lightning.git#XRE2-2167-2"
+    "wpe-lightning": "https://github.com/pxscene/Lightning.git#spark"
   },
   "main": "src/lightning.mjs",
   "scripts": {
