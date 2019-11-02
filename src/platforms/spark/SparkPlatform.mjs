@@ -45,9 +45,11 @@ export default class SparkPlatform {
 
     uploadGlTexture(gl, textureSource, source, options) {
         if (textureSource.manager.stage.platform._sparkCanvas && source == -1) {
-            textureSource.manager.stage.platform._sparkCanvas.internal.paint(
-                textureSource.manager.stage.platform._sparkCanvas.x,
-                textureSource.manager.stage.platform._sparkCanvas.y);
+            textureSource.textures.forEach(texture => {
+                texture.elements.forEach(element => {
+                options.imageRef.paint(element.x,element.y);
+                });
+            });
         }
         else
             gl.texImage2D(gl.TEXTURE_2D, 0, options.internalFormat, textureSource.w, textureSource.h, 0, options.format, options.type, source);
