@@ -44,7 +44,7 @@ export default class SparkPlatform {
     }
 
     uploadGlTexture(gl, textureSource, source, options) {
-        if (textureSource.manager.stage.platform._sparkCanvas && source == -1) {
+        if (textureSource.manager.stage.platform._sparkCanvas && options.imageRef != undefined) {
             textureSource.textures.forEach(texture => {
                 texture.elements.forEach(element => {
                 options.imageRef.paint(element.x,element.y);
