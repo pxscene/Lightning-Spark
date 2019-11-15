@@ -115,7 +115,6 @@ export default class SparkMediaplayer extends lng.Component {
     }
 
     open(url) {
-        url = "http://ccr.ip-ads.xcr.comcast.net/omg04/354092102255/nbcuni.comNBCU2019012500009006/HD_VOD_DAI_XFS09004000H_0125_LVLH03.mpd"; // hardcoded URL
         console.log('Playing stream', url);
         if (this.application.noVideo) {
             console.log('noVideo option set, so ignoring: ' + url);
