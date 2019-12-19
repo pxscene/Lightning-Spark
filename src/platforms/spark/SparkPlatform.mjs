@@ -48,7 +48,12 @@ export default class SparkPlatform {
     }
 
     loadSrcTexture({src}, cb) {
-        let sparkImage = sparkscene.create({t:"image", url:src});
+        let proxyServer = "";
+        if (sparkQueryParams && sparkQueryParams.sparkProxyServer) {
+            proxyServer = sparkQueryParams.sparkProxyServer;
+        }
+        let imageResource = sparkscene.create({t:"imageResource", url:src, proxy:proxyServer});
+        let sparkImage = sparkscene.create({t:"image", resource:imageResource});
         const sparkGl = this.stage.gl;
         sparkImage.ready.then( function(obj) {
             let texture = sparkImage.texture();
@@ -127,7 +132,12 @@ export default class SparkPlatform {
     }
 
     createSvg(cb, stage, url, w, h) {
-        let imageObj = sparkscene.create({ t: "image", url:url});
+        let proxyServer = "";
+        if (sparkQueryParams && sparkQueryParams.sparkProxyServer) {
+            proxyServer = sparkQueryParams.sparkProxyServer;
+        }
+        let imageResource = sparkscene.create({t:"imageResource", url:src, proxy:proxyServer});
+        let imageObj = sparkscene.create({ t: "image", resource:imageResource});
         imageObj.ready.then( function(obj) {
             let canvas = {};
             canvas.flipTextureY = true;
