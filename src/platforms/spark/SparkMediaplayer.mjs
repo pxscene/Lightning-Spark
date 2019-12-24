@@ -55,6 +55,11 @@ export default class SparkMediaplayer extends lng.Component {
             proxy:proxyServer
         });
 
+        var _this = this;
+        sparkscene.on('onClose' , function(e) {
+          _this.close();
+         });
+
         this.eventHandlers = [];
     }
 
