@@ -472,6 +472,9 @@ export default class SparkPlatform {
         return fontResource;
     }
 
+    static supportsMediaPlayer() {
+        return sparkscene.capabilities.video && sparkscene.capabilities.video.player === 1;
+    }
 
     static createMediaPlayer()
     {
