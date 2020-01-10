@@ -56,6 +56,7 @@ export default class SparkPlatform {
         let sparkImage = sparkscene.create({t:"image", resource:imageResource});
         const sparkGl = this.stage.gl;
         sparkImage.ready.then( function(obj) {
+            sparkImage.parent = sparkscene.root;
             let texture = sparkImage.texture();
             cb(null, {source: sparkGl.createWebGLTexture(texture), w: sparkImage.resource.w, h: sparkImage.resource.h, premultiplyAlpha: false, flipBlueRed: false, imageRef: sparkImage, flipTextureY:true});
         });
@@ -88,6 +89,7 @@ export default class SparkPlatform {
 
         let imageObj = sparkscene.create({ t: "image", url:data});
         imageObj.ready.then( function(obj) {
+            imageObj.parent = sparkscene.root;
             let canvas = {};
             canvas.flipTextureY = true;
             canvas.internal = imageObj;
@@ -120,6 +122,7 @@ export default class SparkPlatform {
 
         let imageObj = sparkscene.create({ t: "image", url:data});
         imageObj.ready.then( function(obj) {
+            imageObj.parent = sparkscene.root;
             let canvas = {};
             canvas.flipTextureY = true;
             canvas.internal = imageObj;
@@ -139,6 +142,7 @@ export default class SparkPlatform {
         let imageResource = sparkscene.create({t:"imageResource", url:src, proxy:proxyServer});
         let imageObj = sparkscene.create({ t: "image", resource:imageResource});
         imageObj.ready.then( function(obj) {
+            imageObj.parent = sparkscene.root;
             let canvas = {};
             canvas.flipTextureY = true;
             canvas.internal = imageObj;
