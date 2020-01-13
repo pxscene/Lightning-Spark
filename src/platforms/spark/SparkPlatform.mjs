@@ -2,6 +2,8 @@ import fs from "fs";
 import http from "http";
 import https from "https";
 import SparkMediaplayer from "./SparkMediaplayer.mjs";
+import ApplicationTexture from "./ApplicationTexture.mjs";
+
 export default class SparkPlatform {
 
     init(stage) {
@@ -479,6 +481,10 @@ export default class SparkPlatform {
     static createMediaPlayer()
     {
         return SparkMediaplayer;
+    }
+
+    static createApplicationTexture() {
+        return ApplicationTexture;
     }
 }
 
