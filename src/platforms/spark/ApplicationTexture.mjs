@@ -292,7 +292,14 @@ export default class ApplicationTexture extends lng.Texture {
 
       _this._app.ready.then(function () {
         let texture = _this.stage.gl.createWebGLTexture(_this._app.texture());
-        cb(null, {source: texture, w: _this._w, h: _this._h});
+        cb(null, {
+          source: texture,
+          w: _this._w,
+          h: _this._h,
+          premultiplyAlpha: false,
+          flipBlueRed: false,
+          flipTextureY: true
+        });
 
       }).catch(e => {
         console.error(`optimus error: ${e}`);
