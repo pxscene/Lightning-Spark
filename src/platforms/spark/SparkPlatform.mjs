@@ -445,9 +445,11 @@ export default class SparkPlatform {
         return drawPromise;
     }
 
-    paint(obj, x, y, color) {
+    paint(gl, obj, x, y, color) {
         if (obj) {
+            gl.beginNativeSparkRendering();
             obj.paint(x, y, color, true);
+            gl.endNativeSparkRendering();
         }
     }
 
