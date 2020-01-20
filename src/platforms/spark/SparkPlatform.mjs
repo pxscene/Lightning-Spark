@@ -46,7 +46,13 @@ export default class SparkPlatform {
     }
 
     uploadGlTexture(gl, textureSource, source, options) {
-        gl.texImage2D(gl.TEXTURE_2D, 0, options.internalFormat, textureSource.w, textureSource.h, 0, options.format, options.type, source);
+        if (options.imageRef && source == -1) {
+            // we'll be calling Spark's paint method directly instead of rendering a texture
+            return;
+        }
+        else {
+            gl.texImage2D(gl.TEXTURE_2D, 0, options.internalFormat, textureSource.w, textureSource.h, 0, options.format, options.type, source);
+        }
     }
 
     loadSrcTexture({src}, cb) {
@@ -175,7 +181,11 @@ export default class SparkPlatform {
 
         if (canvas && canvas.internal)
         {
-            options.source = this.stage.gl.createWebGLTexture(canvas.internal.texture());
+            if (canvas.internal.drawNatively && sparkscene.capabilities.sparkgl && sparkscene.capabilities.sparkgl.nativedrawing) {
+                options.source = -1;
+            } else {
+                options.source = this.stage.gl.createWebGLTexture(canvas.internal.texture());
+            }
             options.w = canvas.width;
             options.h = canvas.height;
             options.imageRef = canvas.internal;
@@ -255,6 +265,9 @@ export default class SparkPlatform {
                     const cutEy = textTextureRenderer._settings.cutEy * precision;
 
                     canvasInternal.label = textTextureRenderer._settings.text.slice(0, 10) + '..'; // allows to distinguish different canvases by label, useful for debugging
+                    if (sparkQueryParams && sparkQueryParams.sparkNativeText) {
+                        canvasInternal.drawNatively = true;
+                    }
                     // Set font properties.
                     // textTextureRenderer.setFontProperties();
                     // Total width.
@@ -434,6 +447,12 @@ export default class SparkPlatform {
             });
         });
         return drawPromise;
+    }
+
+    paint(obj, x, y, color) {
+        if (obj) {
+            obj.paint(x, y, color, true);
+        }
     }
 
     loadFonts(fonts) {
