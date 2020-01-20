@@ -290,15 +290,16 @@ export default class ApplicationTexture extends lng.Texture {
         });
       }
 
+      _this._app.drawNatively = true;
       _this._app.ready.then(function () {
-        let texture = _this.stage.gl.createWebGLTexture(_this._app.texture());
         cb(null, {
-          source: texture,
+          source: -1,
           w: _this._w,
           h: _this._h,
           premultiplyAlpha: false,
           flipBlueRed: false,
-          flipTextureY: true
+          flipTextureY: true,
+          imageRef: _this._app
         });
 
       }).catch(e => {
