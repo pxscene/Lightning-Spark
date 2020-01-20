@@ -451,7 +451,11 @@ export default class SparkPlatform {
 
     paint(obj, x, y, color) {
         if (obj) {
-            obj.paint(x, y, color, true);
+            if (typeof obj.description === "function" && obj.description() === "pxWaylandContainer") {
+                obj.paint(x, y, color, false);
+            } else {
+                obj.paint(x, y, color, true);
+            }
         }
     }
 
