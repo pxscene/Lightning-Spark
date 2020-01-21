@@ -291,7 +291,7 @@ export default class ApplicationTexture extends lng.Texture {
       }
 
       _this._app.drawNatively = true;
-      _this._app.ready.then(function () {
+      _this._app.readyBase.then(function () {
         cb(null, {
           source: -1,
           w: _this._w,
