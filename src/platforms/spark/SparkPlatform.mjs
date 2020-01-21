@@ -451,8 +451,9 @@ export default class SparkPlatform {
 
     paint(obj, x, y, color) {
         if (obj) {
-            if (typeof obj.description === "function" && obj.description() === "pxWaylandContainer") {
+            if (typeof obj.description === "function" && (obj.description() === "pxWaylandContainer" || obj.description() === "pxSceneContainer")) {
                 obj.paint(x, y, color, false);
+                this.stage.forceRenderUpdate(); // keep updating
             } else {
                 obj.paint(x, y, color, true);
             }
