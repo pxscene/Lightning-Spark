@@ -499,5 +499,13 @@ export default class SparkPlatform {
     {
         return SparkMediaplayer;
     }
-}
 
+    addServiceProvider(provider) {
+        if (typeof provider == "function") {
+            sparkscene.addServiceProvider(provider)
+        }
+        else {
+            console.error("service provider need to be a function !!!");
+        }
+    }
+}
