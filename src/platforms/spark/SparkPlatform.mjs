@@ -502,7 +502,7 @@ export default class SparkPlatform {
 
     addServiceProvider(provider) {
         if (typeof provider == "function") {
-            sparkscene.addServiceProvider(provider)
+            sparkscene.addServiceProvider(provider);
         }
         else {
             console.error("service provider need to be a function !!!");
