@@ -263,9 +263,7 @@ export default class SparkPlatform {
                     const cutEy = textTextureRenderer._settings.cutEy * precision;
 
                     canvasInternal.label = textTextureRenderer._settings.text.slice(0, 10) + '..'; // allows to distinguish different canvases by label, useful for debugging
-                    if (sparkQueryParams && sparkQueryParams.sparkNativeText) {
-                        canvasInternal.drawNatively = true;
-                    }
+                    canvasInternal.drawNatively = true;
                     // Set font properties.
                     // textTextureRenderer.setFontProperties();
                     // Total width.
