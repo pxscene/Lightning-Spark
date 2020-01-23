@@ -2,6 +2,8 @@ import fs from "fs";
 import http from "http";
 import https from "https";
 import SparkMediaplayer from "./SparkMediaplayer.mjs";
+import ApplicationTexture from "./ApplicationTexture.mjs";
+
 export default class SparkPlatform {
 
     init(stage) {
@@ -448,7 +450,12 @@ export default class SparkPlatform {
     paint(gl, obj, x, y, color) {
         if (obj) {
             gl.beginNativeSparkRendering();
-            obj.paint(x, y, color, true);
+            if (typeof obj.description === "function" && (obj.description() === "pxWaylandContainer" || obj.description() === "pxSceneContainer")) {
+                obj.paint(x, y, color, false);
+                this.stage.forceRenderUpdate(); // keep updating
+            } else {
+                obj.paint(x, y, color, true);
+            }
             gl.endNativeSparkRendering();
         }
     }
@@ -498,6 +505,10 @@ export default class SparkPlatform {
     static createMediaPlayer()
     {
         return SparkMediaplayer;
+    }
+
+    static createApplicationTexture() {
+        return ApplicationTexture;
     }
 
     addServiceProvider(provider) {
