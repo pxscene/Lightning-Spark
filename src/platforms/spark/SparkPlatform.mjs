@@ -265,9 +265,7 @@ export default class SparkPlatform {
                     const cutEy = textTextureRenderer._settings.cutEy * precision;
 
                     canvasInternal.label = textTextureRenderer._settings.text.slice(0, 10) + '..'; // allows to distinguish different canvases by label, useful for debugging
-                    if (sparkQueryParams && sparkQueryParams.sparkNativeText) {
-                        canvasInternal.drawNatively = true;
-                    }
+                    canvasInternal.drawNatively = true;
                     // Set font properties.
                     // textTextureRenderer.setFontProperties();
                     // Total width.
@@ -449,14 +447,16 @@ export default class SparkPlatform {
         return drawPromise;
     }
 
-    paint(obj, x, y, color) {
+    paint(gl, obj, x, y, color) {
         if (obj) {
+            gl.beginNativeSparkRendering();
             if (typeof obj.description === "function" && (obj.description() === "pxWaylandContainer" || obj.description() === "pxSceneContainer")) {
                 obj.paint(x, y, color, false);
                 this.stage.forceRenderUpdate(); // keep updating
             } else {
                 obj.paint(x, y, color, true);
             }
+            gl.endNativeSparkRendering();
         }
     }
 
@@ -510,5 +510,13 @@ export default class SparkPlatform {
     static createApplicationTexture() {
         return ApplicationTexture;
     }
-}
 
+    addServiceProvider(provider) {
+        if (typeof provider == "function") {
+            sparkscene.addServiceProvider(provider);
+        }
+        else {
+            console.error("service provider need to be a function !!!");
+        }
+    }
+}
