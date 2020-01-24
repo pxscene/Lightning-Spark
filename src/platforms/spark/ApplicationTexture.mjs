@@ -188,8 +188,8 @@ export default class ApplicationTexture extends lng.Texture {
     return this._app.moveBackward();
   }
 
-  setFocus() {
-    return this._app.setFocus();
+  setFocus(b) {
+    return this._app.setFocus(b);
   }
 
   isFocused() {
