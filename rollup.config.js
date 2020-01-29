@@ -1,6 +1,6 @@
 const resolve = require('rollup-plugin-node-resolve');
 
-export default {
+export default [{
     input: './src/lightning.mjs',
     plugins: [resolve({
         only: [ 'wpe-lightning' ]
@@ -10,4 +10,12 @@ export default {
         format: 'cjs',
         name: 'lng'
     }
-};
+}, {
+    input: './src/platforms/spark/SparkPlatform.mjs',
+    output: {
+        file: './dist/SparkPlatform.js',
+        format: 'iife',
+        name: 'SparkPlatform',
+        interop: false
+    }
+}];
