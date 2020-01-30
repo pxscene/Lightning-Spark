@@ -44,8 +44,8 @@ export default class SparkMediaplayer extends lng.Component {
     _init() {
 
         let proxyServer = "";
-        if (sparkQueryParams && sparkQueryParams.sparkProxyServer) {
-            proxyServer = sparkQueryParams.sparkProxyServer;
+        if (sparkQueryParams && sparkQueryParams.sparkVideoProxyServer) {
+            proxyServer = sparkQueryParams.sparkVideoProxyServer;
         }
 
         this.videoEl = sparkscene.create({
