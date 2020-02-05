@@ -1,6 +1,27 @@
 import SparkMediaplayer from "./SparkMediaplayer.mjs";
 import ApplicationTexture from "./ApplicationTexture.mjs";
 
+class SparkWindow {
+    _construct(stage){
+      this.stage = stage
+    }
+
+    get innerWidth() {
+      return (this.stage)?this.stage.getOption('w'):sparkscene.w;
+    }
+
+    get innerHeight() {
+      return (this.stage)?this.stage.getOption('h'):sparkscene.h;
+    }
+
+    get lng() {
+      console.log("Madana returning lng .....");
+      return lng;
+    }
+}
+
+global.window = window = new SparkWindow(null)
+
 export default class SparkPlatform {
 
     init(stage) {
@@ -8,9 +29,11 @@ export default class SparkPlatform {
         this._looping = false;
         this._awaitingLoop = false;
         this._sparkCanvas = null;
+        window.stage = stage
     }
 
     destroy() {
+        global.window = window = null
     }
 
     startLoop() {
