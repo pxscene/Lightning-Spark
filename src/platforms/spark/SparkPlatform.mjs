@@ -1,5 +1,6 @@
 import SparkMediaplayer from "./SparkMediaplayer.mjs";
 import ApplicationTexture from "./ApplicationTexture.mjs";
+import lng from "wpe-lightning/src/lightning.mjs";
 
 class SparkWindow {
     _construct(stage){
