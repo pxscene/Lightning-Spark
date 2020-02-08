@@ -16,7 +16,6 @@ class SparkWindow {
     }
 
     get lng() {
-      console.log("Madana returning lng .....");
       return lng;
     }
 }
