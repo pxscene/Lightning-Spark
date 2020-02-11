@@ -20,7 +20,10 @@ class SparkWindow {
     }
 }
 
-global.window = window = new SparkWindow(null)
+global.window = new SparkWindow(null);
+if (typeof window !== "undefined") {
+    window = global.window;
+}
 
 export default class SparkPlatform {
 
@@ -29,11 +32,16 @@ export default class SparkPlatform {
         this._looping = false;
         this._awaitingLoop = false;
         this._sparkCanvas = null;
-        window.stage = stage
+        if (typeof window !== "undefined") {
+            window.stage = stage;
+        }
     }
 
     destroy() {
-        global.window = window = null
+        if (typeof window !== "undefined") {
+            window = null;
+        }
+        global.window = null;
     }
 
     startLoop() {
