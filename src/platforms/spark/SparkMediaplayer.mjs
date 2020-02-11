@@ -4,6 +4,7 @@ export default class SparkMediaplayer extends lng.Component {
 
     _construct(){
         this._skipRenderToTexture = false;
+        this._playSent = false;
     }
 
     static _supportedEvents()
@@ -126,6 +127,7 @@ export default class SparkMediaplayer extends lng.Component {
     }
 
     open(url) {
+        this._playSent = false;
         console.log('Playing stream', url);
         if (this.application.noVideo) {
             console.log('noVideo option set, so ignoring: ' + url);
@@ -136,6 +138,7 @@ export default class SparkMediaplayer extends lng.Component {
     }
 
     close() {
+        this._playSent = false;
         this.videoEl.stop();
         this._clearSrc();
     }
@@ -161,6 +164,7 @@ export default class SparkMediaplayer extends lng.Component {
     }
 
     reload() {
+        this._playSent = false;
         var url = this.videoEl.url;
         this.close();
         this.videoEl.url = url;
@@ -229,6 +233,7 @@ export default class SparkMediaplayer extends lng.Component {
     }
 
     error(args) {
+        this._playSent = false;
         this._fireConsumer('$mediaplayerError', args);
         this._setState("");
         return "";
@@ -273,6 +278,7 @@ export default class SparkMediaplayer extends lng.Component {
     onEndOfStream(args) {
         this._fireConsumer('$mediaplayerEnded', args);
         this._setState("");
+        this._playSent = false;
     }
 
     onProgressUpdate(args) {
@@ -280,6 +286,10 @@ export default class SparkMediaplayer extends lng.Component {
             currentTime: this.videoEl.position,
             duration: this.videoEl.duration || 1
         });
+        if (this._playSent == false) {
+          this._fireConsumer('$mediaplayerPlaying', args);
+          this._playSent = true;      
+        }
     }
 
     durationchange(args) {
