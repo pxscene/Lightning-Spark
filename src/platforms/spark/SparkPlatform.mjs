@@ -261,6 +261,20 @@ export default class SparkPlatform {
         console.warn("No support for key handling");
     }
 
+    registerKeydownHandler(keyhandler) {
+        sparkview.on('onKeyDown', function(e) {
+            console.log('webgl onKeyDown keyCode:', e.keyCode);
+            keyhandler(e);
+        });
+    }
+
+    registerKeyupHandler(keyhandler) {
+        sparkview.on('onKeyUp', function(e) {
+            console.log('webgl onKeyUp keyCode:', e.keyCode);
+            keyhandler(e);
+        });
+    }
+
     drawText(textTextureRenderer) {
         let canvasInternal = textTextureRenderer._canvas.internal; // _canvas.internal is a pxTextCanvas object created in getDrawingCanvas()
         let drawPromise = new Promise((resolve, reject) => {
