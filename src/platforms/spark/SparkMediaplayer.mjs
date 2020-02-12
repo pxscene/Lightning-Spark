@@ -1,5 +1,7 @@
 import lng from "wpe-lightning/src/lightning.mjs";
 
+var playerEventsMap = {'8' : '$mediaplayerPlaying'};
+
 export default class SparkMediaplayer extends lng.Component {
 
     _construct(){
@@ -9,7 +11,7 @@ export default class SparkMediaplayer extends lng.Component {
 
     static _supportedEvents()
     {
-        return ['onProgressUpdate', 'onEndOfStream'];
+        return ['onProgressUpdate', 'onPlayerStateChanged', 'onEndOfStream'];
     }
 
     static _template() {
@@ -286,9 +288,16 @@ export default class SparkMediaplayer extends lng.Component {
             currentTime: this.videoEl.position,
             duration: this.videoEl.duration || 1
         });
-        if (this._playSent == false) {
+        if ((sparkscene.capabilities.video.player < 2) && (this._playSent == false)) {
           this._fireConsumer('$mediaplayerPlaying', args);
           this._playSent = true;      
+        }
+    }
+
+    onPlayerStateChanged(args) {
+        //this._fireConsumer(playerEventsMap[args.state], args);
+        if (args.event.state == 8) {
+          this._fireConsumer('$mediaplayerPlaying', args);
         }
     }
 
