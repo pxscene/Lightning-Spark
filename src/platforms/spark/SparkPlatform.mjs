@@ -18,6 +18,9 @@ class SparkWindow {
     get lng() {
       return lng;
     }
+    
+    close() {
+    }
 }
 
 global.window = new SparkWindow(null);
