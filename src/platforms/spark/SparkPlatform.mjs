@@ -263,14 +263,12 @@ export default class SparkPlatform {
 
     registerKeydownHandler(keyhandler) {
         sparkview.on('onKeyDown', function(e) {
-            console.log('webgl onKeyDown keyCode:', e.keyCode);
             keyhandler(e);
         });
     }
 
     registerKeyupHandler(keyhandler) {
         sparkview.on('onKeyUp', function(e) {
-            console.log('webgl onKeyUp keyCode:', e.keyCode);
             keyhandler(e);
         });
     }
