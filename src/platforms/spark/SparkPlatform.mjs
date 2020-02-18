@@ -20,13 +20,13 @@ class SparkWindow {
     }
 
     get location() {
-        return new (require('url').URL)(__dirname);
+        return new URL(__dirname);
     }
 }
 
 class SparkDocument {
     get location() {
-        return new (require('url').URL)(__dirname);
+        return new URL(__dirname);
     }
 }
 
