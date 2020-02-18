@@ -22,6 +22,10 @@ class SparkWindow {
     get location() {
         return new URL(__dirname);
     }
+
+    get localStorage() {
+        return localStorage;
+    }
 }
 
 class SparkDocument {
