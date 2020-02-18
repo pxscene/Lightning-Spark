@@ -18,6 +18,18 @@ class SparkWindow {
     get lng() {
       return lng;
     }
+
+    get location() {
+        return new this.URL(__dirname);
+    }
+
+    get localStorage() {
+        return localStorage;
+    }
+
+    get URL() {
+        return require('url').URL;
+    }
 }
 
 global.window = new SparkWindow(null);
