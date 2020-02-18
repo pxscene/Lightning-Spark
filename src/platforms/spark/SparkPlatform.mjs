@@ -20,7 +20,7 @@ class SparkWindow {
     }
 
     get location() {
-        return new URL(__dirname);
+        return new this.URL(__dirname);
     }
 
     get localStorage() {
@@ -28,23 +28,13 @@ class SparkWindow {
     }
 
     get URL() {
-        return URL;
-    }
-}
-
-class SparkDocument {
-    get location() {
-        return new URL(__dirname);
+        return require('url').URL;
     }
 }
 
 global.window = new SparkWindow(null);
-global.document = new SparkDocument();
 if (typeof window !== "undefined") {
     window = global.window;
-}
-if (typeof document !== "undefined") {
-    document = global.document;
 }
 
 export default class SparkPlatform {
@@ -64,10 +54,6 @@ export default class SparkPlatform {
             window = null;
         }
         global.window = null;
-        if (typeof document !== "undefined") {
-            document = null;
-        }
-        global.document = null;
     }
 
     startLoop() {
