@@ -18,11 +18,25 @@ class SparkWindow {
     get lng() {
       return lng;
     }
+
+    get location() {
+        return new (require('url').URL)(__dirname);
+    }
+}
+
+class SparkDocument {
+    get location() {
+        return new (require('url').URL)(__dirname);
+    }
 }
 
 global.window = new SparkWindow(null);
+global.document = new SparkDocument();
 if (typeof window !== "undefined") {
     window = global.window;
+}
+if (typeof document !== "undefined") {
+    document = global.document;
 }
 
 export default class SparkPlatform {
@@ -42,6 +56,10 @@ export default class SparkPlatform {
             window = null;
         }
         global.window = null;
+        if (typeof document !== "undefined") {
+            document = null;
+        }
+        global.document = null;
     }
 
     startLoop() {
