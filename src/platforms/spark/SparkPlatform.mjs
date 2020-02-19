@@ -274,13 +274,13 @@ export default class SparkPlatform {
     }
 
     registerKeydownHandler(keyhandler) {
-        sparkview.on('onKeyDown', function(e) {
+        sparkscene.root.on('onKeyDown', function(e) {
             keyhandler(e);
         });
     }
 
     registerKeyupHandler(keyhandler) {
-        sparkview.on('onKeyUp', function(e) {
+        sparkscene.root.on('onKeyUp', function(e) {
             keyhandler(e);
         });
     }
