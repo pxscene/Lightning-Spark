@@ -44,6 +44,7 @@ export default class SparkPlatform {
         this._looping = false;
         this._awaitingLoop = false;
         this._sparkCanvas = null;
+        this._appRoot = sparkscene.root;
         if (typeof window !== "undefined") {
             window.stage = stage;
         }
@@ -54,6 +55,7 @@ export default class SparkPlatform {
             window = null;
         }
         global.window = null;
+        this._appRoot = null;
     }
 
     startLoop() {
