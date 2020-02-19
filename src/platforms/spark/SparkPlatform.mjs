@@ -499,14 +499,21 @@ export default class SparkPlatform {
         return drawPromise;
     }
 
-    paint(gl, obj, x, y, color) {
+    paint(gl, obj, x, y, color, e) {
         if (obj) {
+            let translateOnly = true;
+            if (e && e.rotation !== 0) {
+                obj.r = e.rotation * 180/Math.PI;
+                translateOnly = false;
+            } else {
+                obj.r = 0;
+            }
             gl.beginNativeSparkRendering();
             if (typeof obj.description === "function" && (obj.description() === "pxWaylandContainer" || obj.description() === "pxSceneContainer")) {
                 obj.paint(x, y, color, false);
                 this.stage.forceRenderUpdate(); // keep updating
             } else {
-                obj.paint(x, y, color, true);
+                obj.paint(x, y, color, translateOnly);
             }
             gl.endNativeSparkRendering();
         }
