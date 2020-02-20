@@ -2,40 +2,152 @@ import SparkMediaplayer from "./SparkMediaplayer.mjs";
 import ApplicationTexture from "./ApplicationTexture.mjs";
 import lng from "wpe-lightning/src/lightning.mjs";
 
-class SparkWindow {
-    _construct(stage){
-      this.stage = stage
+const customGlobals = [];
+
+const makeGlobal = (name, val) => {
+    global[name] = val;
+    vm.runInThisContext(`${name} = global.${name}`);
+    customGlobals.push(name);
+};
+
+makeGlobal('URL', require('url').URL);
+makeGlobal('URLSearchParams', require('url').URLSearchParams);
+makeGlobal('location', new URL(__dirname));
+
+class Event extends String {}
+
+makeGlobal('Event', Event);
+
+class EventTarget extends require('events') {
+    addEventListener(type, listener) {
+        this.addListener(type, listener)
+    }
+
+    removeEventListener(type, listener) {
+        this.removeListener(type, listener)
+    }
+
+    dispatchEvent(event) {
+        this.emit(event)
+    }
+}
+
+class SparkWindow extends EventTarget {
+    constructor(stage){
+        super();
+        this.stage = stage;
     }
 
     get innerWidth() {
-      return (this.stage)?this.stage.getOption('w'):sparkscene.w;
+        return (this.stage)?this.stage.getOption('w'):sparkscene.w;
     }
 
     get innerHeight() {
-      return (this.stage)?this.stage.getOption('h'):sparkscene.h;
+        return (this.stage)?this.stage.getOption('h'):sparkscene.h;
     }
 
     get lng() {
-      return lng;
+        return lng;
     }
 
     get location() {
-        return new this.URL(__dirname);
+        return location;
     }
 
     get localStorage() {
         return localStorage;
     }
 
-    get URL() {
-        return require('url').URL;
+    get clearTimeout() {
+        return clearTimeout;
+    }
+
+    get setTimeout() {
+        return setTimeout;
+    }
+
+    get $badger() {
+        return $badger
+    }
+
+    get Plugin() {
+        return Plugin
     }
 }
 
-global.window = new SparkWindow(null);
-if (typeof window !== "undefined") {
-    window = global.window;
+makeGlobal('window', new SparkWindow(null));
+
+class SparkDocument extends EventTarget {
+    constructor() {
+        super();
+        this.head = {appendChild: () => {}};
+        this.body = {appendChild: () => {}};
+        this.fonts = {add: () => {}};
+    }
+
+    get location() {
+        return location;
+    }
+
+    createElement(tagName) {
+        if (tagName === 'style') {
+            return {sheet: {insertRule: () => {}}, appendChild: () => {}}
+        } else if (tagName === 'script') {
+            let element = {};
+            Object.defineProperty(element, 'onload', {
+                set: value => setImmediate(value)
+            });
+            return element
+        } else if (tagName === 'link') {
+            return {}
+        }
+    }
+
+    createTextNode() {
+        return {}
+    }
 }
+
+makeGlobal('document', new SparkDocument());
+
+class XMLHttpRequest extends EventTarget {
+    constructor() {
+        super();
+        this.readyState = 0;
+    }
+
+    open(method, URL) {
+        this._method = method;
+        this._URL = URL;
+        this.readyState = 1;
+    }
+
+    send(body) {
+        let self = this;
+        fetch(this._URL, {method:this._method, body:body}).then(r => {
+            self.status = r.status;
+            self.readyState = 4;
+            self.responseText = r._bodyText.toString();
+            self.onreadystatechange();
+        });
+    }
+}
+
+makeGlobal('XMLHttpRequest', XMLHttpRequest);
+
+class FontFace {
+    constructor(family, source, descriptors) {
+        let m = source.match(/\((.*)\)/);
+        this._url = m?m[1]:m;
+    }
+
+    load() {
+        let fontResource = sparkscene.create({t: "fontResource", url: this._url});
+        return fontResource.ready;
+    }
+}
+
+makeGlobal('FontFace', FontFace);
 
 export default class SparkPlatform {
 
@@ -50,10 +162,11 @@ export default class SparkPlatform {
     }
 
     destroy() {
-        if (typeof window !== "undefined") {
-            window = null;
+        let i;
+        while ((i = customGlobals.pop())) {
+            delete global[i];
+            eval(`if (typeof ${i} !== "undefined") ${i} = null`);
         }
-        global.window = null;
     }
 
     startLoop() {
