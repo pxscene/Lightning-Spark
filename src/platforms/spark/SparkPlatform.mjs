@@ -106,6 +106,10 @@ class SparkDocument extends EventTarget {
     createTextNode() {
         return {}
     }
+
+    getElementById() {
+        return null
+    }
 }
 
 makeGlobal('document', new SparkDocument());
@@ -119,6 +123,12 @@ class XMLHttpRequest extends EventTarget {
     open(method, URL) {
         this._method = method;
         this._URL = URL;
+        if (/^\/\//.test(this._URL)) {
+            this._URL = window.location.protocol + this._URL
+        }
+        if (!/^(?:https?:)/i.test(this._URL)) {
+            this._URL = window.location.origin + this._URL
+        }
         this.readyState = 1;
     }
 
