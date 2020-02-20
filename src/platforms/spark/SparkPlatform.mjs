@@ -33,17 +33,16 @@ class EventTarget extends require('events') {
 }
 
 class SparkWindow extends EventTarget {
-    constructor(stage){
+    constructor(){
         super();
-        this.stage = stage;
     }
 
     get innerWidth() {
-        return (this.stage)?this.stage.getOption('w'):sparkscene.w;
+        return sparkscene.w;
     }
 
     get innerHeight() {
-        return (this.stage)?this.stage.getOption('h'):sparkscene.h;
+        return sparkscene.h;
     }
 
     get lng() {
@@ -75,7 +74,7 @@ class SparkWindow extends EventTarget {
     }
 }
 
-makeGlobal('window', new SparkWindow(null));
+makeGlobal('window', new SparkWindow());
 
 class SparkDocument extends EventTarget {
     constructor() {
@@ -166,17 +165,9 @@ export default class SparkPlatform {
         this._looping = false;
         this._awaitingLoop = false;
         this._sparkCanvas = null;
-        if (typeof window !== "undefined") {
-            window.stage = stage;
-        }
     }
 
     destroy() {
-        let i;
-        while ((i = customGlobals.pop())) {
-            delete global[i];
-            eval(`if (typeof ${i} !== "undefined") ${i} = null`);
-        }
     }
 
     startLoop() {
