@@ -45,6 +45,10 @@ export default class SparkPlatform {
         this._awaitingLoop = false;
         this._sparkCanvas = null;
         this._appRoot = sparkscene.root;
+        sparkscene.on('onClose' , function(e) {
+            //this.destroy(); // it is also possible
+            this._appRoot = null;
+        }.bind(this));
         if (typeof window !== "undefined") {
             window.stage = stage;
         }
