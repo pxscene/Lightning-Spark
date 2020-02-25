@@ -80,11 +80,7 @@ class SparkDocument extends EventTarget {
     if (tagName === 'style') {
       return {sheet: {insertRule: () => {}}, appendChild: () => {}}
     } else if (tagName === 'script') {
-      let element = {};
-      Object.defineProperty(element, 'onload', {
-        set: value => setImmediate(value)
-      });
-      return element
+      return new SparkScript()
     } else if (tagName === 'link') {
       return {}
     }
@@ -109,13 +105,7 @@ export class XMLHttpRequest extends EventTarget {
 
   open(method, URL) {
     this._method = method;
-    this._URL = URL;
-    if (/^\/\//.test(this._URL)) {
-      this._URL = window.location.protocol + this._URL
-    }
-    if (!/^(?:https?:)/i.test(this._URL)) {
-      this._URL = window.location.origin + this._URL
-    }
+    this._URL = relative2absolute(URL);
     this.readyState = 1;
   }
 
@@ -142,3 +132,45 @@ export class FontFace {
     return fontResource.ready;
   }
 }
+
+class SparkScript {
+  set onload(callback) {
+    this._onload = callback;
+  }
+
+  set load(b) {
+    this._load = b
+  }
+
+  set src(url) {
+    url = relative2absolute(url);
+
+    if (this._load) {
+      let self = this;
+      fetch(url).then(r => {
+        if (r.status >= 200 && r.status <= 299) {
+          vm.runInThisContext(r._bodyText.toString());
+          self._onloaded()
+        } else {
+          console.log(`HTTP ${r.status} for '${url}'`);
+        }
+      })
+    } else {
+      this._onloaded()
+    }
+  }
+
+  _onloaded() {
+    let self = this;
+    setImmediate(() => {
+      if (self._onload)
+        self._onload()
+    })
+  }
+}
+
+const relative2absolute = url =>
+  /^\/\//.test(url) ? window.location.protocol + url :
+    (/^\//.test(url) ? window.location.origin + url :
+      (!/^(?:https?:)/i.test(url) ? require("url").resolve(__dirname, url) :
+        url));
