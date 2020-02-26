@@ -558,7 +558,7 @@ export default class SparkPlatform {
     }
 
     static supportsMediaPlayer() {
-        return sparkscene.capabilities.video && sparkscene.capabilities.video.player === 1;
+        return sparkscene.capabilities.video && sparkscene.capabilities.video.player >= 1;
     }
 
     static createMediaPlayer()
