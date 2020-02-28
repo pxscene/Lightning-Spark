@@ -1,41 +1,13 @@
 import SparkMediaplayer from "./SparkMediaplayer.mjs";
 import ApplicationTexture from "./ApplicationTexture.mjs";
-import lng from "wpe-lightning/src/lightning.mjs";
+import * as SparkWeb from "./SparkWeb.mjs";
 
-class SparkWindow {
-    _construct(stage){
-      this.stage = stage
-    }
+const makeGlobal = (name, val) => {
+    global[name] = val;
+    vm.runInThisContext(`${name} = global.${name}`);
+};
 
-    get innerWidth() {
-      return (this.stage)?this.stage.getOption('w'):sparkscene.w;
-    }
-
-    get innerHeight() {
-      return (this.stage)?this.stage.getOption('h'):sparkscene.h;
-    }
-
-    get lng() {
-      return lng;
-    }
-
-    get location() {
-        return new this.URL(__dirname);
-    }
-
-    get localStorage() {
-        return localStorage;
-    }
-
-    get URL() {
-        return require('url').URL;
-    }
-}
-
-global.window = new SparkWindow(null);
-if (typeof window !== "undefined") {
-    window = global.window;
-}
+Object.keys(SparkWeb).forEach(name => makeGlobal(name, SparkWeb[name]));
 
 export default class SparkPlatform {
 
@@ -44,16 +16,9 @@ export default class SparkPlatform {
         this._looping = false;
         this._awaitingLoop = false;
         this._sparkCanvas = null;
-        if (typeof window !== "undefined") {
-            window.stage = stage;
-        }
     }
 
     destroy() {
-        if (typeof window !== "undefined") {
-            window = null;
-        }
-        global.window = null;
     }
 
     startLoop() {
