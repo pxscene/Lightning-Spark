@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "license": "apache",
   "dependencies": {
-    "wpe-lightning": "git+https://github.com/pxscene/Lightning.git#spark"
+    "lightning-sdk": "github:WebPlatformForEmbedded/Lightning-SDK"
   },
   "main": "src/lightning.mjs",
   "repository": {

@@ -1,6 +1,6 @@
-import lng from "wpe-lightning/src/lightning.mjs";
+import { Lightning } from 'lightning-sdk'
 
-export default class ApplicationTexture extends lng.Texture {
+export default class ApplicationTexture extends Lightning.Texture {
 
   constructor(stage) {
     super(stage);
