@@ -2,7 +2,7 @@ import lng from "wpe-lightning/src/lightning.mjs";
 
 export const URL = require('url').URL;
 export const URLSearchParams = require('url').URLSearchParams;
-export const location = new URL(__dirname);
+export const location = __dirname.startsWith("/")?new URL("file://" + __dirname):new URL(__dirname);
 
 export class Event extends String {}
 
