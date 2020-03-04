@@ -16,6 +16,10 @@ export default class SparkPlatform {
         this._looping = false;
         this._awaitingLoop = false;
         this._sparkCanvas = null;
+        this._appRoot = sparkscene.root;
+        sparkscene.on('onClose' , function(e) {
+            this._appRoot = null;
+        }.bind(this));
     }
 
     destroy() {
@@ -239,13 +243,13 @@ export default class SparkPlatform {
     }
 
     registerKeydownHandler(keyhandler) {
-        sparkview.on('onKeyDown', function(e) {
+        sparkscene.root.on('onKeyDown', function(e) {
             keyhandler(e);
         });
     }
 
     registerKeyupHandler(keyhandler) {
-        sparkview.on('onKeyUp', function(e) {
+        sparkscene.root.on('onKeyUp', function(e) {
             keyhandler(e);
         });
     }
