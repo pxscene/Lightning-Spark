@@ -61,8 +61,7 @@ export default class Launcher {
                 },
                 options));
 
-        const sv = sparkview;
-        sv.on('onKeyDown', event => {
+        sparkscene.root.on('onKeyDown', event => {
             // normalize the key event to match web structure
             const f = event.flags;
             const keyEvent = {
