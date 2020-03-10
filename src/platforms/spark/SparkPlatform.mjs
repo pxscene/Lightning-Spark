@@ -1,5 +1,5 @@
-import * from "./SparkMediaplayer.mjs";
-import * from "./ApplicationTexture.mjs";
+import SparkMediaplayer,clearVideoElementResources from "./SparkMediaplayer.mjs";
+import ApplicationTexture,clearAppTextureResources from "./ApplicationTexture.mjs";
 import * as SparkWeb from "./SparkWeb.mjs";
 
 const makeGlobal = (name, val) => {
