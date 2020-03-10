@@ -1,5 +1,5 @@
-import * as SparkMediaplayerExports from "./SparkMediaplayer.mjs";
-import * as ApplicationTextureExports from "./ApplicationTexture.mjs";
+import * from "./SparkMediaplayer.mjs";
+import * from "./ApplicationTexture.mjs";
 import * as SparkWeb from "./SparkWeb.mjs";
 
 const makeGlobal = (name, val) => {
@@ -8,8 +8,6 @@ const makeGlobal = (name, val) => {
 };
 
 Object.keys(SparkWeb).forEach(name => makeGlobal(name, SparkWeb[name]));
-Object.keys(ApplicationTextureExports).forEach(name => makeGlobal(name, ApplicationTextureExports[name]));
-Object.keys(SparkMediaplayerExports).forEach(name => makeGlobal(name, SparkMediaplayerExports[name]));
 
 var appPlatform = null;
 
