@@ -1,5 +1,21 @@
 import lng from "wpe-lightning/src/lightning.mjs";
 
+var appTextures = [];
+
+function clearAppTexture(texture) {
+    texture._app.destroy();
+    texture._app = null;
+    texture._optimus.setScene(null);
+    texture._optimus = null;
+}
+
+export function clearAppTextureResources() {
+    for (var i=0; i<appTextures.length; i++) {
+      clearAppTexture(appTextures[i]);
+    }
+    appTextures = [];
+}
+
 export default class ApplicationTexture extends lng.Texture {
 
   constructor(stage) {
@@ -10,6 +26,7 @@ export default class ApplicationTexture extends lng.Texture {
       _this._readyResolve = resolve;
       _this._readyReject = reject;
     });
+    appTextures.push(this);
   }
 
   get id() {
