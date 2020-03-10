@@ -1,5 +1,5 @@
-import SparkMediaplayer,clearVideoElementResources from "./SparkMediaplayer.mjs";
-import ApplicationTexture,clearAppTextureResources from "./ApplicationTexture.mjs";
+import * as mediaPlayerExports from "./SparkMediaplayer.mjs";
+import * as appTextureExports from "./ApplicationTexture.mjs";
 import * as SparkWeb from "./SparkWeb.mjs";
 
 const makeGlobal = (name, val) => {
@@ -8,6 +8,11 @@ const makeGlobal = (name, val) => {
 };
 
 Object.keys(SparkWeb).forEach(name => makeGlobal(name, SparkWeb[name]));
+
+var SparkMediaplayer = mediaPlayerExports.SparkMediaplayer;
+var clearVideoElementResources = mediaPlayerExports.clearVideoElementResources;
+var ApplicationTexture = appTextureExports.ApplicationTexture;
+var clearAppTextureResources = appTextureExports.clearAppTextureResources;
 
 var appPlatform = null;
 
