@@ -1,10 +1,21 @@
 import lng from "wpe-lightning/src/lightning.mjs";
 
-export default class SparkMediaplayer extends lng.Component {
+var appVideoEl = null;
+
+// clear video element resources
+export function clearVideoElementResources() {
+    if (null != appVideoEl) {
+      appVideoEl.close();
+    }
+    appVideoEl = null;
+}
+
+export class SparkMediaplayer extends lng.Component {
 
     _construct(){
         this._skipRenderToTexture = false;
         this._playSent = false;
+        appVideoEl = this;
     }
 
     static _supportedEvents()

@@ -1,5 +1,5 @@
-import SparkMediaplayer from "./SparkMediaplayer.mjs";
-import ApplicationTexture from "./ApplicationTexture.mjs";
+import * as SparkMediaplayerExports from "./SparkMediaplayer.mjs";
+import * as ApplicationTextureExports from "./ApplicationTexture.mjs";
 import * as SparkWeb from "./SparkWeb.mjs";
 
 const makeGlobal = (name, val) => {
@@ -8,6 +8,28 @@ const makeGlobal = (name, val) => {
 };
 
 Object.keys(SparkWeb).forEach(name => makeGlobal(name, SparkWeb[name]));
+Object.keys(ApplicationTextureExports).forEach(name => makeGlobal(name, ApplicationTextureExports[name]));
+Object.keys(SparkMediaplayerExports).forEach(name => makeGlobal(name, SparkMediaplayerExports[name]));
+
+var appPlatform = null;
+
+// clear platform resources
+function clearPlatform(platform) {
+    if (global.window != null) {
+      global.window.stage = null;
+      delete global.window;
+    }
+    if (null != platform) {
+      platform._appRoot = null;
+    }
+}
+
+function clearResources() {
+    clearAppTextureResources();
+    clearVideoElementResources();
+    clearPlatform(appPlatform);
+    appPlatform = null;
+}
 
 export default class SparkPlatform {
 
@@ -17,13 +39,8 @@ export default class SparkPlatform {
         this._awaitingLoop = false;
         this._sparkCanvas = null;
         this._appRoot = sparkscene.root;
-        sparkscene.on('onClose' , function(e) {
-            if (global.window != null) {
-              global.window.stage = null;
-              delete global.window;
-            }
-            this._appRoot = null;
-        }.bind(this));
+        appPlatform = this;
+        sparkscene.on("onClose", clearResources);
     }
 
     destroy() {
