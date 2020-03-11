@@ -10,6 +10,13 @@ export default class ApplicationTexture extends lng.Texture {
       _this._readyResolve = resolve;
       _this._readyReject = reject;
     });
+    sparkscene.on("onClose", function(e) {
+      console.log("MADANA INSIDE TEXTURE ON CLOSE");
+      _this._app.destroy();
+      _this._app = null;
+      _this._optimus.setScene(null);
+      _this._optimus = null; 
+    });
   }
 
   get id() {
