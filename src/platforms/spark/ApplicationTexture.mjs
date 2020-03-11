@@ -11,7 +11,7 @@ export default class ApplicationTexture extends lng.Texture {
       _this._readyReject = reject;
     });
     sparkscene.on("onClose", function(e) {
-      //_this._app.destroy();
+      _this._app.destroy();
       _this._app = null;
       _this._optimus.setScene(null);
       _this._optimus = null; 
