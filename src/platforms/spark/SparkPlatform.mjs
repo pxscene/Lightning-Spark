@@ -19,9 +19,6 @@ export default class SparkPlatform {
         this._sparkCanvas = null;
         this._appRoot = sparkscene.root;
         sparkscene.on('onClose' , function(e) {
-            if (global.window != null) {
-              delete global.window;
-            }
             _this._appRoot = null;
         });
     }
