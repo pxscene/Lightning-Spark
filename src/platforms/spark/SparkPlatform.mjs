@@ -12,18 +12,15 @@ Object.keys(SparkWeb).forEach(name => makeGlobal(name, SparkWeb[name]));
 export default class SparkPlatform {
 
     init(stage) {
+        let _this = this;
         this.stage = stage;
         this._looping = false;
         this._awaitingLoop = false;
         this._sparkCanvas = null;
         this._appRoot = sparkscene.root;
         sparkscene.on('onClose' , function(e) {
-            if (global.window != null) {
-              global.window.stage = null;
-              delete global.window;
-            }
-            this._appRoot = null;
-        }.bind(this));
+            _this._appRoot = null;
+        });
     }
 
     destroy() {
