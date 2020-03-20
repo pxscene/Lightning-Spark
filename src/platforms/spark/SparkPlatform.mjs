@@ -70,12 +70,14 @@ export default class SparkPlatform {
         if (sparkQueryParams && sparkQueryParams.sparkProxyServer) {
             proxyServer = sparkQueryParams.sparkProxyServer;
         }
-        let imageResource = sparkscene.create({t:"imageResource", url:src, proxy:proxyServer});
-        let sparkImage = sparkscene.create({t:"image", resource:imageResource});
         const sparkGl = this.stage.gl;
+        let imageResource = sparkscene.create({t:"imageResource", url:src, proxy:proxyServer});
+        imageResource.ready.then( function(obj) {
+        let sparkImage = sparkscene.create({t:"image", resolveWithoutParent:true, resource:imageResource});
         sparkImage.ready.then( function(obj) {
             let texture = sparkImage.texture();
             cb(null, {source: sparkGl.createWebGLTexture(texture), w: sparkImage.resource.w, h: sparkImage.resource.h, premultiplyAlpha: false, flipBlueRed: false, imageRef: sparkImage, flipTextureY:true});
+            });
         });
     }
 
@@ -155,7 +157,8 @@ export default class SparkPlatform {
             proxyServer = sparkQueryParams.sparkProxyServer;
         }
         let imageResource = sparkscene.create({t:"imageResource", url:src, proxy:proxyServer});
-        let imageObj = sparkscene.create({ t: "image", resource:imageResource});
+        imageResource.ready.then( function(obj) {
+        let imageObj = sparkscene.create({ t: "image", resolveWithoutParent:true, resource:imageResource});
         imageObj.ready.then( function(obj) {
             let canvas = {};
             canvas.flipTextureY = true;
@@ -169,6 +172,7 @@ export default class SparkPlatform {
             let canvas = {};
             canvas.internal = imageObj;
             cb(null, canvas);;
+        });
         });
     }
 
