@@ -84,7 +84,7 @@ export default class SparkPlatform {
         if (strokeWidth === undefined) strokeWidth = 0;
         if (fillColor === undefined) fillColor = 0;
 
-        fillColor = fill ? fillColor : 0;
+        fillColor = fill ? fillColor : "0x00000000";
         fillColor = fillColor.toString(16);
         let opacity = 1;
         if (fillColor.length >= 8)
