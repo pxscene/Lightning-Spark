@@ -55,6 +55,7 @@ export default class SparkMediaplayer extends lng.Component {
             autoPlay: "false",
             proxy:proxyServer
         });
+        this.videoEl.style = {}
 
         var _this = this;
         sparkscene.on('onClose' , function(e) {
