@@ -70,6 +70,7 @@ export default class SparkPlatform {
         if (sparkQueryParams && sparkQueryParams.sparkProxyServer) {
             proxyServer = sparkQueryParams.sparkProxyServer;
         }
+        src = src.replace(/ /g, "%20");
         let imageResource = sparkscene.create({t:"imageResource", url:src, proxy:proxyServer});
         let sparkImage = sparkscene.create({t:"image", resource:imageResource});
         const sparkGl = this.stage.gl;
