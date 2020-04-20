@@ -155,7 +155,7 @@ export default class SparkPlatform {
         if (sparkQueryParams && sparkQueryParams.sparkProxyServer) {
             proxyServer = sparkQueryParams.sparkProxyServer;
         }
-        let imageResource = sparkscene.create({t:"imageResource", url:src, proxy:proxyServer});
+        let imageResource = sparkscene.create({t:"imageResource", url: url, w: w, h: h, proxy:proxyServer});
         let imageObj = sparkscene.create({ t: "image", resource:imageResource});
         imageObj.ready.then( function(obj) {
             let canvas = {};
