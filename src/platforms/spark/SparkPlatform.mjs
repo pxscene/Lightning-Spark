@@ -74,10 +74,17 @@ export default class SparkPlatform {
         let imageResource = sparkscene.create({t:"imageResource", url:src, proxy:proxyServer});
         let sparkImage = sparkscene.create({t:"image", resource:imageResource});
         const sparkGl = this.stage.gl;
-        sparkImage.ready.then( function(obj) {
-            let texture = sparkImage.texture();
-            cb(null, {source: sparkGl.createWebGLTexture(texture), w: sparkImage.resource.w, h: sparkImage.resource.h, premultiplyAlpha: false, flipBlueRed: false, imageRef: sparkImage, flipTextureY:true});
-        });
+        sparkImage.ready.then(
+            function() // resolve
+            {
+                let texture = sparkImage.texture();
+                cb(null, {source: sparkGl.createWebGLTexture(texture), w: sparkImage.resource.w, h: sparkImage.resource.h, premultiplyAlpha: false, flipBlueRed: false, imageRef: sparkImage, flipTextureY: true});
+            },
+            function() // reject
+            {
+                console.warn(' loadSrcTexture()  >>  Failed to load: ' + src);
+            }
+        );
     }
 
     createRoundRect(cb, stage, w, h, radius, strokeWidth, strokeColor, fill, fillColor) {
@@ -106,16 +113,23 @@ export default class SparkPlatform {
           '</svg>';
 
         let imageObj = sparkscene.create({ t: "image", url:data});
-        imageObj.ready.then( function(obj) {
-            let canvas = {};
-            canvas.flipTextureY = true;
-            canvas.internal = imageObj;
-            canvas.width = w;
-            canvas.height = h;
-            imageObj.w = w;
-            imageObj.h = h;
-            cb(null, canvas);
-        });
+        imageObj.ready.then(
+            function() // resolve
+            {
+                let canvas = {};
+                canvas.flipTextureY = true;
+                canvas.internal = imageObj;
+                canvas.width = w;
+                canvas.height = h;
+                imageObj.w = w;
+                imageObj.h = h;
+                cb(null, canvas);
+            },
+            function() // reject
+            {
+                console.warn(' createRoundRect()  >> Failed to load');
+            }
+        );
     }
 
     createShadowRect(cb, stage, w, h, radius, blur, margin) {
@@ -138,16 +152,23 @@ export default class SparkPlatform {
                 </svg>';
 
         let imageObj = sparkscene.create({ t: "image", url:data});
-        imageObj.ready.then( function(obj) {
-            let canvas = {};
-            canvas.flipTextureY = true;
-            canvas.internal = imageObj;
-            canvas.width = w;
-            canvas.height = h;
-            imageObj.w = w;
-            imageObj.h = h;
-            cb(null, canvas);
-        });
+        imageObj.ready.then(
+            function(obj) // resolve
+            {
+                let canvas = {};
+                canvas.flipTextureY = true;
+                canvas.internal = imageObj;
+                canvas.width = w;
+                canvas.height = h;
+                imageObj.w = w;
+                imageObj.h = h;
+                cb(null, canvas);
+            },
+            function() // reject
+            {
+                console.warn(' createShadowRect()  >> Failed to load');
+            }
+            );
     }
 
     createSvg(cb, stage, url, w, h) {
@@ -157,20 +178,27 @@ export default class SparkPlatform {
         }
         let imageResource = sparkscene.create({t:"imageResource", url: url, w: w, h: h, proxy:proxyServer});
         let imageObj = sparkscene.create({ t: "image", resource:imageResource});
-        imageObj.ready.then( function(obj) {
-            let canvas = {};
-            canvas.flipTextureY = true;
-            canvas.internal = imageObj;
-            canvas.width = w;
-            canvas.height = h;
-            imageObj.w = w;
-            imageObj.h = h;
-            cb(null, canvas);
-        }, function(obj) {
-            let canvas = {};
-            canvas.internal = imageObj;
-            cb(null, canvas);;
-        });
+        imageObj.ready.then(
+            function() // resolve
+            {
+                let canvas = {};
+                canvas.flipTextureY = true;
+                canvas.internal = imageObj;
+                canvas.width = w;
+                canvas.height = h;
+                imageObj.w = w;
+                imageObj.h = h;
+                cb(null, canvas);
+            },
+            function() // reject
+            {
+                let canvas = {};
+                canvas.internal = imageObj;
+
+                console.warn(' createSvg()  >> Failed to load');
+
+                cb(null, canvas);
+            });
     }
 
     createWebGLContext(w, h) {
@@ -503,7 +531,8 @@ export default class SparkPlatform {
         // reference to them so they can be used
         // in getFontSetting calls
         Promise.all(promises)
-            .then(() => this._fontResources = fontResources);
+            .then(() => this._fontResources = fontResources)
+            .catch((err) => console.warn(' loadFonts() - Reject  e: ' + err));
 
         // continue to return promise/font object
         // to maintain compatibility with SDK client
