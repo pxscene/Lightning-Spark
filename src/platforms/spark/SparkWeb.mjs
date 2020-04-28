@@ -60,6 +60,9 @@ class SparkWindow extends EventTarget {
   get Plugin() {
     return Plugin
   }
+    
+  close() {
+  }
 }
 
 export const window = new SparkWindow();
